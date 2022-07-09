@@ -14,7 +14,6 @@ impl Hit for Object {
     fn hit(&self, r: &Ray, t_min: f64, t_max: f64, rec: &mut Hitrecord) -> bool {
         match self {
             Object::Sphere(sphere) => Sphere::hit(&sphere, &r, t_min, t_max, rec),
-            _ => false,
         }
     }
 }

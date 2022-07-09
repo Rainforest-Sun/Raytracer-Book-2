@@ -1,3 +1,4 @@
+#![allow(unused_assignments)]
 pub use crate::camera::Camera;
 pub use crate::hittable::Hit;
 pub use crate::hittable::Hitrecord;

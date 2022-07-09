@@ -44,7 +44,6 @@ impl Scatter for Material {
             Material::Dielectric(dielectric) => {
                 Dielectric::scatter(&dielectric, &r_in, &rec, attenuation, scattered)
             }
-            _ => false,
         }
     }
 }

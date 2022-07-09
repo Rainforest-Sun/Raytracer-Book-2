@@ -199,7 +199,7 @@ fn main() {
         for x in 0..width {
             let mut pixel_color1 = Color::new(0.0, 0.0, 0.0);
 
-            for s in 0..samples_per_pixel {
+            for _s in 0..samples_per_pixel {
                 let u = (((x as f64) + rand::random_double()) / ((image_width - 1) as f64)) as f64;
                 let v = (((y as f64) + rand::random_double()) / ((image_height - 1) as f64)) as f64;
                 let r = cam.get_ray(u, v);

@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 pub use crate::ray::Ray;
 pub use crate::vec3::Color;
 pub use crate::vec3::Point3;
