@@ -1,4 +1,4 @@
-pub use crate::vec3::vec3::Vec3;
+pub use crate::vec3::Vec3;
 pub use crate::vec3::Color;
 
 pub fn clamp(x: f64, min: f64, max: f64) -> f64 {

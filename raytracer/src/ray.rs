@@ -1,4 +1,4 @@
-pub use crate::vec3::vec3::Vec3;
+pub use crate::vec3::Vec3;
 pub use crate::vec3::Color;
 pub use crate::vec3::Point3;
 //ray的构造函数参数是引用，可能要修改

@@ -1,5 +1,5 @@
 pub use crate::ray::Ray;
-pub use crate::vec3::vec3::Vec3;
+pub use crate::vec3::Vec3;
 pub use crate::vec3::Color;
 pub use crate::vec3::Point3;
 
@@ -62,9 +62,9 @@ impl Camera {
             lower_left_corner: lower_left_corner_,
             horizontal: hori,
             vertical: vert,
-            u: u,
-            v: v,
-            w: w,
+            u,
+            v,
+            w,
             lens_radius: aperture / 2.0,
         }
     }

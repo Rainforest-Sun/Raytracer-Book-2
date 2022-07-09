@@ -2,7 +2,7 @@ pub use crate::hittable::Hit;
 pub use crate::hittable::Hitrecord;
 pub use crate::material::Material;
 pub use crate::ray::Ray;
-pub use crate::vec3::vec3::Vec3;
+pub use crate::vec3::Vec3;
 pub use crate::vec3::Color;
 pub use crate::vec3::Point3;
 
@@ -51,7 +51,7 @@ impl Hit for Sphere {
         let half_b = Vec3::dot(&oc, &r.direction());
         let c = oc.length_squared() - self.radius * self.radius;
 
-        let discriminant = half_b * half_b - a * c;
+        let discriminant = (half_b * half_b) - (a * c);
         if discriminant < 0.0 {
             return false;
         }
