@@ -51,7 +51,7 @@ impl Hit for Sphere {
         let half_b = Vec3::dot(&oc, &r.direction());
         let c = oc.length_squared() - self.radius * self.radius;
 
-        let discriminant=half_b.powf(2.0)-(a*c);
+        let discriminant = half_b.powf(2.0) - (a * c);
         if discriminant < 0.0 {
             return false;
         }
