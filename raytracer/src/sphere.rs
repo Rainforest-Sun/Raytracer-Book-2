@@ -25,10 +25,10 @@ impl Sphere {
         Sphere {
             center: cen.copy(),
             radius: r,
-            mat_ptr: match m {
-                Some(in_mat_ptr) => Some(Box::new(in_mat_ptr.copy())),
-                None => None,
-            },
+            mat_ptr: m
+                .as_ref()
+                .map(|in_mat_ptr| Box::new(in_mat_ptr.copy()))
+                .map(|in_mat_ptr| Box::new(in_mat_ptr.copy())),
         }
     }
 
@@ -36,10 +36,11 @@ impl Sphere {
         Sphere {
             center: self.center.copy(),
             radius: self.radius,
-            mat_ptr: match &self.mat_ptr {
-                Some(in_mat_ptr) => Some(Box::new(in_mat_ptr.copy())),
-                None => None,
-            },
+            mat_ptr: self
+                .mat_ptr
+                .as_ref()
+                .map(|in_mat_ptr| Box::new(in_mat_ptr.copy()))
+                .map(|in_mat_ptr| Box::new(in_mat_ptr.copy())),
         }
     }
 }
@@ -69,10 +70,11 @@ impl Hit for Sphere {
         rec.p = r.at(rec.t);
         let outward_normal = (rec.p.copy() - self.center.copy()) / self.radius;
         rec.set_face_normal(&r, &outward_normal);
-        rec.mat_ptr = match &self.mat_ptr {
-            Some(in_mat_ptr) => Some(Box::new(in_mat_ptr.copy())),
-            None => None,
-        };
+        rec.mat_ptr = self
+            .mat_ptr
+            .as_ref()
+            .map(|in_mat_ptr| Box::new(in_mat_ptr.copy()))
+            .map(|in_mat_ptr| Box::new(in_mat_ptr.copy()));
         true
     }
 }

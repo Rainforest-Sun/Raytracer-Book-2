@@ -1,3 +1,4 @@
+#![allow(clippy::manual_map)]
 pub use crate::material::Material;
 pub use crate::ray::Ray;
 pub use crate::vec3::Color;
@@ -33,10 +34,11 @@ impl Hitrecord {
             normal: rhs.normal.copy(),
             t: rhs.t,
             front_face: rhs.front_face,
-            mat_ptr: match &rhs.mat_ptr {
-                Some(in_mat_ptr) => Some(Box::new(in_mat_ptr.copy())),
-                None => None,
-            },
+            mat_ptr: rhs
+                .mat_ptr
+                .as_ref()
+                .map(|in_mat_ptr| Box::new(in_mat_ptr.copy()))
+                .map(|in_mat_ptr| Box::new(in_mat_ptr.copy())),
         }
     }
 
@@ -46,10 +48,11 @@ impl Hitrecord {
             normal: self.normal.copy(),
             t: self.t,
             front_face: self.front_face,
-            mat_ptr: match &self.mat_ptr {
-                Some(in_mat_ptr) => Some(Box::new(in_mat_ptr.copy())),
-                None => None,
-            },
+            mat_ptr: self
+                .mat_ptr
+                .as_ref()
+                .map(|in_mat_ptr| Box::new(in_mat_ptr.copy()))
+                .map(|in_mat_ptr| Box::new(in_mat_ptr.copy())),
         }
     }
 

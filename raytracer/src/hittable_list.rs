@@ -27,7 +27,7 @@ impl Object {
 }
 
 pub struct Hittablelist {
-    pub objects: Vec<Box<Object>>,
+    pub objects: Vec<Object>,
 }
 
 impl Hittablelist {
@@ -35,13 +35,13 @@ impl Hittablelist {
         Hittablelist { objects: vec![] }
     }
 
-    pub fn new(obj: Box<Object>) -> Hittablelist {
+    pub fn new(obj: Object) -> Hittablelist {
         let mut res = Hittablelist::default_new();
         res.add(obj);
         res
     }
 
-    pub fn add(&mut self, obj: Box<Object>) {
+    pub fn add(&mut self, obj: Object) {
         self.objects.push(obj);
     }
 

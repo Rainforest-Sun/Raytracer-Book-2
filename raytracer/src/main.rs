@@ -64,11 +64,11 @@ pub fn random_scene() -> Hittablelist {
     let ground_material = Some(Box::new(Material::Lambertian(Lambertian::new(
         &Color::new(0.5, 0.5, 0.5),
     ))));
-    world.add(Box::new(Object::Sphere(Sphere::new(
+    world.add(Object::Sphere(Sphere::new(
         &Point3::new(0.0, -1000.0, 0.0),
         1000.0,
         &ground_material,
-    ))));
+    )));
 
     for a in -11..11 {
         for b in -11..11 {
@@ -85,59 +85,59 @@ pub fn random_scene() -> Hittablelist {
                     let sphere_material = Some(Box::new(Material::Lambertian(Lambertian::new(
                         &albedo.copy(),
                     ))));
-                    world.add(Box::new(Object::Sphere(Sphere::new(
+                    world.add(Object::Sphere(Sphere::new(
                         &center.copy(),
                         0.2,
                         &sphere_material,
-                    ))));
+                    )));
                 } else if choose_mat < 0.95 {
                     let albedo = Color::random_between(0.5, 1.0);
                     let fuzz = rand::random_double_between(0.0, 0.5);
                     let sphere_material =
                         Some(Box::new(Material::Metal(Metal::new(&albedo, fuzz))));
-                    world.add(Box::new(Object::Sphere(Sphere::new(
+                    world.add(Object::Sphere(Sphere::new(
                         &center.copy(),
                         0.2,
                         &sphere_material,
-                    ))));
+                    )));
                 } else {
                     let sphere_material =
                         Some(Box::new(Material::Dielectric(Dielectric::new(1.5))));
-                    world.add(Box::new(Object::Sphere(Sphere::new(
+                    world.add(Object::Sphere(Sphere::new(
                         &center.copy(),
                         0.2,
                         &sphere_material,
-                    ))));
+                    )));
                 }
             }
         }
     }
 
     let material1 = Some(Box::new(Material::Dielectric(Dielectric::new(1.5))));
-    world.add(Box::new(Object::Sphere(Sphere::new(
+    world.add(Object::Sphere(Sphere::new(
         &Point3::new(0.0, 1.0, 0.0),
         1.0,
         &material1,
-    ))));
+    )));
 
     let material2 = Some(Box::new(Material::Lambertian(Lambertian::new(
         &Color::new(0.4, 0.2, 0.1),
     ))));
-    world.add(Box::new(Object::Sphere(Sphere::new(
+    world.add(Object::Sphere(Sphere::new(
         &Point3::new(-4.0, 1.0, 0.0),
         1.0,
         &material2,
-    ))));
+    )));
 
     let material3 = Some(Box::new(Material::Metal(Metal::new(
         &Color::new(0.7, 0.6, 0.5),
         0.0,
     ))));
-    world.add(Box::new(Object::Sphere(Sphere::new(
+    world.add(Object::Sphere(Sphere::new(
         &Point3::new(4.0, 1.0, 0.0),
         1.0,
         &material3,
-    ))));
+    )));
 
     world
 }
