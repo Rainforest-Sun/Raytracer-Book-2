@@ -8,9 +8,9 @@ pub use crate::lambertian::Lambertian;
 pub use crate::metal::Metal;
 pub use crate::ray::Ray;
 pub use crate::sphere::Sphere;
-pub use crate::vec3::Vec3;
 pub use crate::vec3::Color;
 pub use crate::vec3::Point3;
+pub use crate::vec3::Vec3;
 
 pub enum Material {
     Lambertian(Lambertian),

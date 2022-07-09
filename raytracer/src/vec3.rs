@@ -86,7 +86,7 @@ impl Vec3 {
     }
 
     pub fn random_between(min: f64, max: f64) -> Vec3 {
-         Vec3::new(
+        Vec3::new(
             rand::random_double_between(min, max),
             rand::random_double_between(min, max),
             rand::random_double_between(min, max),

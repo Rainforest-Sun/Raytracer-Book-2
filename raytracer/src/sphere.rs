@@ -2,9 +2,9 @@ pub use crate::hittable::Hit;
 pub use crate::hittable::Hitrecord;
 pub use crate::material::Material;
 pub use crate::ray::Ray;
-pub use crate::vec3::Vec3;
 pub use crate::vec3::Color;
 pub use crate::vec3::Point3;
+pub use crate::vec3::Vec3;
 
 pub struct Sphere {
     pub center: Point3,

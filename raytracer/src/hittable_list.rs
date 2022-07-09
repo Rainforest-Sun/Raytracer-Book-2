@@ -1,10 +1,10 @@
 pub use crate::hittable::Hit;
 pub use crate::hittable::Hitrecord;
 pub use crate::ray::Ray;
-pub use crate::vec3::Vec3;
+pub use crate::sphere::Sphere;
 pub use crate::vec3::Color;
 pub use crate::vec3::Point3;
-pub use crate::Sphere;
+pub use crate::vec3::Vec3;
 
 pub enum Object {
     Sphere(Sphere),

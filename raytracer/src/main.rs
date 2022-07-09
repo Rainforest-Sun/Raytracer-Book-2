@@ -30,9 +30,9 @@ pub use crate::material::Scatter;
 pub use crate::metal::Metal;
 pub use crate::ray::Ray;
 pub use crate::sphere::Sphere;
-pub use crate::vec3::Vec3; //文件位置::mod名::struct名
 pub use crate::vec3::Color;
 pub use crate::vec3::Point3;
+pub use crate::vec3::Vec3; //文件位置::mod名::struct名
 
 pub fn ray_color(r: &Ray, world: &Hittablelist, depth: i32) -> Color {
     let mut rec = Hitrecord::default_new();

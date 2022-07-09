@@ -1,8 +1,8 @@
 pub use crate::material::Material;
 pub use crate::ray::Ray;
-pub use crate::vec3::Vec3;
 pub use crate::vec3::Color;
 pub use crate::vec3::Point3;
+pub use crate::vec3::Vec3;
 
 pub struct Hitrecord {
     pub p: Point3,
