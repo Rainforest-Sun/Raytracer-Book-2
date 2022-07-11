@@ -146,13 +146,13 @@ fn main() {
     print!("{}[2J", 27 as char); // Clear screen
     print!("{esc}[2J{esc}[1;1H", esc = 27 as char); // Set cursor position as 1,1
 
-    let height = 800;
-    let width = 1200;
-    let quality = 60; // From 0 to 100
+    let height = 1200;
+    let width = 1600;
+    let quality = 100; // From 0 to 100
     let path = "output/output.jpg";
 
-    let aspect_ratio = 3.0 / 2.0;
-    let image_width = 1200;
+    let aspect_ratio = 4.0 / 3.0;
+    let image_width = 1600;
     let image_height = ((image_width as f64) / aspect_ratio) as i32;
     let samples_per_pixel = 500; //记得改成500
     let max_depth = 50;
