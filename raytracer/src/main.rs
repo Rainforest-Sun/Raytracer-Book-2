@@ -5,34 +5,54 @@ use image::{ImageBuffer, RgbImage};
 use console::style;
 use indicatif::{ProgressBar, ProgressStyle};
 
+pub mod aabb;
+pub mod bvhnode;
 pub mod camera;
+pub mod checker_texture;
 pub mod color;
 pub mod dielectric;
+pub mod func;
 pub mod hittable;
 pub mod hittable_list;
+pub mod image_texture;
 pub mod lambertian;
 pub mod material;
 pub mod metal;
+pub mod movingsphere;
+pub mod noise_texture;
+pub mod perlin;
 pub mod rand;
 pub mod ray;
+pub mod solidcolor;
 pub mod sphere;
+pub mod texture;
 pub mod vec3;
 
+pub use crate::aabb::Aabb;
+pub use crate::bvhnode::Bvhnode;
 pub use crate::camera::Camera;
+pub use crate::checker_texture::Checkertexture;
 pub use crate::dielectric::Dielectric;
 pub use crate::hittable::Hit;
 pub use crate::hittable::Hitrecord;
 pub use crate::hittable_list::Hittablelist;
 pub use crate::hittable_list::Object;
+pub use crate::image_texture::Imagetexture;
 pub use crate::lambertian::Lambertian;
 pub use crate::material::Material;
 pub use crate::material::Scatter;
 pub use crate::metal::Metal;
+pub use crate::movingsphere::Movingsphere;
+pub use crate::noise_texture::Noisetexture;
+pub use crate::perlin::Perlin;
 pub use crate::ray::Ray;
+pub use crate::solidcolor::Solidcolor;
 pub use crate::sphere::Sphere;
+pub use crate::texture::Texture;
+pub use crate::texture::Value;
 pub use crate::vec3::Color;
 pub use crate::vec3::Point3;
-pub use crate::vec3::Vec3; //文件位置::mod名::struct名
+pub use crate::vec3::Vec3;
 
 pub fn ray_color(r: &Ray, world: &Hittablelist, depth: i32) -> Color {
     let mut rec = Hitrecord::default_new();
@@ -58,11 +78,83 @@ pub fn ray_color(r: &Ray, world: &Hittablelist, depth: i32) -> Color {
     Color::new(1.0, 1.0, 1.0) * (1.0 - t) + Color::new(0.5, 0.7, 1.0) * t
 }
 
+pub fn two_spheres() -> Hittablelist {
+    let mut objects = Hittablelist::default_new();
+
+    let checker = Some(Box::new(Texture::Checkertexture(
+        Checkertexture::new_from_color(&Color::new(0.2, 0.3, 0.1), &Color::new(0.9, 0.9, 0.9)),
+    )));
+
+    let ground_material = Some(Box::new(Material::Lambertian(Lambertian::new_from_ptr(
+        &checker,
+    ))));
+
+    objects.add(Object::Sphere(Sphere::new(
+        &Point3::new(0.0, -10.0, 0.0),
+        10.0,
+        &ground_material,
+    )));
+    objects.add(Object::Sphere(Sphere::new(
+        &Point3::new(0.0, 10.0, 0.0),
+        10.0,
+        &ground_material,
+    )));
+
+    objects
+}
+
+pub fn two_perlin_spheres() -> Hittablelist {
+    let mut objects = Hittablelist::default_new();
+
+    let texture = Some(Box::new(Texture::Noisetexture(Noisetexture::new(4.0))));
+
+    let material = Some(Box::new(Material::Lambertian(Lambertian::new_from_ptr(
+        &texture,
+    ))));
+
+    objects.add(Object::Sphere(Sphere::new(
+        &Point3::new(0.0, -1000.0, 0.0),
+        1000.0,
+        &material,
+    )));
+    objects.add(Object::Sphere(Sphere::new(
+        &Point3::new(0.0, 2.0, 0.0),
+        2.0,
+        &material,
+    )));
+
+    objects
+}
+
+pub fn earth() -> Hittablelist {
+    let mut objects = Hittablelist::default_new();
+
+    let texture = Some(Box::new(Texture::Imagetexture(Imagetexture::new(
+        &String::from("image/earthmap.jpg"),
+    ))));
+
+    let earth_surface = Some(Box::new(Material::Lambertian(Lambertian::new_from_ptr(
+        &texture,
+    ))));
+
+    objects.add(Object::Sphere(Sphere::new(
+        &Point3::new(0.0, 0.0, 0.0),
+        2.0,
+        &earth_surface,
+    )));
+
+    objects
+}
+
 pub fn random_scene() -> Hittablelist {
     let mut world = Hittablelist::default_new();
 
-    let ground_material = Some(Box::new(Material::Lambertian(Lambertian::new(
-        &Color::new(0.5, 0.5, 0.5),
+    let checker = Some(Box::new(Texture::Checkertexture(
+        Checkertexture::new_from_color(&Color::new(0.2, 0.3, 0.1), &Color::new(0.9, 0.9, 0.9)),
+    )));
+
+    let ground_material = Some(Box::new(Material::Lambertian(Lambertian::new_from_ptr(
+        &checker,
     ))));
     world.add(Object::Sphere(Sphere::new(
         &Point3::new(0.0, -1000.0, 0.0),
@@ -85,8 +177,13 @@ pub fn random_scene() -> Hittablelist {
                     let sphere_material = Some(Box::new(Material::Lambertian(Lambertian::new(
                         &albedo.copy(),
                     ))));
-                    world.add(Object::Sphere(Sphere::new(
+                    let center2 =
+                        center.copy() + Vec3::new(0.0, rand::random_double_between(0.0, 0.5), 0.0);
+                    world.add(Object::Movingsphere(Movingsphere::new(
                         &center.copy(),
+                        &center2.copy(),
+                        0.0,
+                        1.0,
                         0.2,
                         &sphere_material,
                     )));
@@ -146,15 +243,15 @@ fn main() {
     print!("{}[2J", 27 as char); // Clear screen
     print!("{esc}[2J{esc}[1;1H", esc = 27 as char); // Set cursor position as 1,1
 
-    let height = 1200;
-    let width = 1600;
-    let quality = 100; // From 0 to 100
+    let height = 225;
+    let width = 400;
+    let quality = 60; // From 0 to 100
     let path = "output/output.jpg";
 
-    let aspect_ratio = 4.0 / 3.0;
-    let image_width = 1600;
+    let aspect_ratio = 16.0 / 9.0;
+    let image_width = 400;
     let image_height = ((image_width as f64) / aspect_ratio) as i32;
-    let samples_per_pixel = 500; //记得改成500
+    let samples_per_pixel = 5; //记得改成500
     let max_depth = 50;
 
     println!(
@@ -176,21 +273,52 @@ fn main() {
         .template("{spinner:.green} [{elapsed_precise}] [{wide_bar:.cyan/blue}] [{pos}/{len}] ({eta})")
         .progress_chars("#>-"));
 
-    let world = random_scene();
+    let world;
 
-    let lookfrom = Point3::new(13.0, 2.0, 3.0);
-    let lookat = Point3::new(0.0, 0.0, 0.0);
+    let lookfrom;
+    let lookat;
+    let vfov;
+    let mut aperture = 0.0;
+    match 0 {
+        1 => {
+            world = random_scene();
+            lookfrom = Point3::new(13.0, 2.0, 3.0);
+            lookat = Point3::new(0.0, 0.0, 0.0);
+            vfov = 20.0;
+            aperture = 0.1;
+        }
+        2 => {
+            world = two_spheres();
+            lookfrom = Point3::new(13.0, 2.0, 3.0);
+            lookat = Point3::new(0.0, 0.0, 0.0);
+            vfov = 20.0;
+        }
+        3 => {
+            world = two_perlin_spheres();
+            lookfrom = Point3::new(13.0, 2.0, 3.0);
+            lookat = Point3::new(0.0, 0.0, 0.0);
+            vfov = 20.0;
+        }
+        _ => {
+            world = earth();
+            lookfrom = Point3::new(13.0, 2.0, 3.0);
+            lookat = Point3::new(0.0, 0.0, 0.0);
+            vfov = 20.0;
+        }
+    }
+
     let vup = Vec3::new(0.0, 1.0, 0.0);
     let dist_to_focus = 10.0;
-    let aperture = 0.1;
     let cam = Camera::new(
         &lookfrom,
         &lookat,
         &vup,
-        20.0,
+        vfov,
         aspect_ratio,
         aperture,
         dist_to_focus,
+        0.0,
+        1.0,
     );
 
     //print!("P3\n{} {}\n255\n", image_width, image_height);

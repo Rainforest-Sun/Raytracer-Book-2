@@ -1,18 +1,22 @@
 #![allow(dead_code)]
+#![allow(clippy::too_many_arguments)]
+pub use crate::rand;
 pub use crate::ray::Ray;
 pub use crate::vec3::Color;
 pub use crate::vec3::Point3;
 pub use crate::vec3::Vec3;
 
 pub struct Camera {
-    origin: Point3,
-    lower_left_corner: Point3,
-    horizontal: Vec3,
-    vertical: Vec3,
-    u: Vec3,
-    v: Vec3,
-    w: Vec3,
-    lens_radius: f64,
+    pub origin: Point3,
+    pub lower_left_corner: Point3,
+    pub horizontal: Vec3,
+    pub vertical: Vec3,
+    pub u: Vec3,
+    pub v: Vec3,
+    pub w: Vec3,
+    pub lens_radius: f64,
+    pub time0: f64,
+    pub time1: f64,
 }
 
 impl Camera {
@@ -42,6 +46,8 @@ impl Camera {
         aspect_ratio: f64,
         aperture: f64,
         focus_dist: f64,
+        _time0: f64,
+        _time1: f64,
     ) -> Camera {
         let theta = vfov * (std::f64::consts::PI) / 180.0;
         let h = (theta / 2.0).tan();
@@ -67,6 +73,8 @@ impl Camera {
             v,
             w,
             lens_radius: aperture / 2.0,
+            time0: _time0,
+            time1: _time1,
         }
     }
 
@@ -81,6 +89,7 @@ impl Camera {
                 + self.vertical.copy() * t
                 - self.origin.copy()
                 - offset.copy()),
+            rand::random_double_between(self.time0, self.time1),
         )
     }
 }

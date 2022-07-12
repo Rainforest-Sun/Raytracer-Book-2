@@ -8,6 +8,7 @@ pub use crate::lambertian::Lambertian;
 pub use crate::material::Material;
 pub use crate::material::Scatter;
 pub use crate::metal::Metal;
+pub use crate::movingsphere::Movingsphere;
 pub use crate::ray::Ray;
 pub use crate::sphere::Sphere;
 pub use crate::vec3::Color;
@@ -50,7 +51,7 @@ impl Scatter for Dielectric {
             direction = Vec3::refract(&unit_direction.copy(), &rec.normal.copy(), refraction_ratio);
         }
 
-        *scattered = Ray::new(&rec.p.copy(), &direction);
+        *scattered = Ray::new(&rec.p.copy(), &direction, r_in.time());
         true
     }
 }

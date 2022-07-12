@@ -1,4 +1,5 @@
 #![allow(clippy::manual_map)]
+pub use crate::aabb::Aabb;
 pub use crate::material::Material;
 pub use crate::ray::Ray;
 pub use crate::vec3::Color;
@@ -10,11 +11,17 @@ pub struct Hitrecord {
     pub normal: Vec3,
     pub mat_ptr: Option<Box<Material>>,
     pub t: f64,
+    pub u: f64,
+    pub v: f64,
     pub front_face: bool,
 }
 
 pub trait Hit {
     fn hit(&self, r: &Ray, t_min: f64, t_max: f64, rec: &mut Hitrecord) -> bool;
+}
+
+pub trait Boundingbox {
+    fn boundingbox(&self, time0: f64, time1: f64, output_box: &mut Aabb) -> bool;
 }
 
 impl Hitrecord {
@@ -23,6 +30,8 @@ impl Hitrecord {
             p: Point3::default_new(),
             normal: Vec3::default_new(),
             t: 0.0,
+            u: 0.0,
+            v: 0.0,
             front_face: false,
             mat_ptr: None,
         }
@@ -33,6 +42,8 @@ impl Hitrecord {
             p: rhs.p.copy(),
             normal: rhs.normal.copy(),
             t: rhs.t,
+            u: rhs.u,
+            v: rhs.v,
             front_face: rhs.front_face,
             mat_ptr: rhs
                 .mat_ptr
@@ -47,6 +58,8 @@ impl Hitrecord {
             p: self.p.copy(),
             normal: self.normal.copy(),
             t: self.t,
+            u: self.u,
+            v: self.v,
             front_face: self.front_face,
             mat_ptr: self
                 .mat_ptr

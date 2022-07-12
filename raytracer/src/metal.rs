@@ -4,6 +4,7 @@ pub use crate::hittable::Hitrecord;
 pub use crate::hittable_list::Hittablelist;
 pub use crate::hittable_list::Object;
 pub use crate::material::Scatter;
+pub use crate::movingsphere::Movingsphere;
 pub use crate::ray::Ray;
 pub use crate::sphere::Sphere;
 pub use crate::vec3::Color;
@@ -27,6 +28,7 @@ impl Scatter for Metal {
         *scattered = Ray::new(
             &rec.p,
             &(reflected + Vec3::random_in_unit_sphere() * self.fuzz),
+            r_in.time(),
         );
         *attenuation = self.albedo.copy();
         Vec3::dot(&scattered.direction(), &rec.normal) > 0.0

@@ -257,6 +257,16 @@ impl DivAssign<f64> for Vec3 {
         self.z /= rhs;
     }
 }
+impl Clone for Vec3 {
+    fn clone(&self) -> Vec3 {
+        Vec3 {
+            x: self.x,
+            y: self.y,
+            z: self.z,
+        }
+    }
+}
+impl Copy for Vec3 {}
 
 pub type Point3 = Vec3;
 pub type Color = Vec3;
