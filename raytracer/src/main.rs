@@ -6,15 +6,19 @@ use console::style;
 use indicatif::{ProgressBar, ProgressStyle};
 
 pub mod aabb;
+pub mod boxx;
 pub mod bvhnode;
 pub mod camera;
 pub mod checker_texture;
 pub mod color;
+pub mod constant_medium;
 pub mod dielectric;
+pub mod diffuse_light;
 pub mod func;
 pub mod hittable;
 pub mod hittable_list;
 pub mod image_texture;
+pub mod isotropic;
 pub mod lambertian;
 pub mod material;
 pub mod metal;
@@ -23,22 +27,30 @@ pub mod noise_texture;
 pub mod perlin;
 pub mod rand;
 pub mod ray;
+pub mod rect;
+pub mod rotate;
 pub mod solidcolor;
 pub mod sphere;
 pub mod texture;
+pub mod translate;
 pub mod vec3;
 
 pub use crate::aabb::Aabb;
+pub use crate::boxx::Boxx;
 pub use crate::bvhnode::Bvhnode;
 pub use crate::camera::Camera;
 pub use crate::checker_texture::Checkertexture;
+pub use crate::constant_medium::ConstantMedium;
 pub use crate::dielectric::Dielectric;
+pub use crate::diffuse_light::Diffuselight;
 pub use crate::hittable::Hit;
 pub use crate::hittable::Hitrecord;
 pub use crate::hittable_list::Hittablelist;
 pub use crate::hittable_list::Object;
 pub use crate::image_texture::Imagetexture;
+pub use crate::isotropic::Isotropic;
 pub use crate::lambertian::Lambertian;
+pub use crate::material::Emitted;
 pub use crate::material::Material;
 pub use crate::material::Scatter;
 pub use crate::metal::Metal;
@@ -46,14 +58,19 @@ pub use crate::movingsphere::Movingsphere;
 pub use crate::noise_texture::Noisetexture;
 pub use crate::perlin::Perlin;
 pub use crate::ray::Ray;
+pub use crate::rect::XYrect;
+pub use crate::rect::XZrect;
+pub use crate::rect::YZrect;
+pub use crate::rotate::RotateY;
 pub use crate::solidcolor::Solidcolor;
 pub use crate::sphere::Sphere;
 pub use crate::texture::Texture;
 pub use crate::texture::Value;
+pub use crate::translate::Translate;
 pub use crate::vec3::Color;
 pub use crate::vec3::Point3;
 pub use crate::vec3::Vec3;
-
+/*
 pub fn ray_color(r: &Ray, world: &Hittablelist, depth: i32) -> Color {
     let mut rec = Hitrecord::default_new();
     let inf: f64 = 1.79769e+308;
@@ -76,6 +93,32 @@ pub fn ray_color(r: &Ray, world: &Hittablelist, depth: i32) -> Color {
     let unit_direction = Vec3::unit_vector(&r.direction());
     let t = 0.5 * (unit_direction.y() + 1.0);
     Color::new(1.0, 1.0, 1.0) * (1.0 - t) + Color::new(0.5, 0.7, 1.0) * t
+}
+*/
+pub fn ray_color(r: &Ray, background: &Color, world: &Hittablelist, depth: i32) -> Color {
+    let mut rec = Hitrecord::default_new();
+    let inf: f64 = 1.79769e+308;
+
+    if depth <= 0 {
+        return Color::new(0.0, 0.0, 0.0);
+    }
+    if !world.hit(&r, 0.001, inf, &mut rec) {
+        return background.copy();
+    }
+
+    let mut scattered = Ray::default_new();
+    let mut attenuation = Color::default_new();
+    let emitted;
+    if let Some(in_mat_ptr) = &rec.mat_ptr {
+        emitted = in_mat_ptr.emitted(rec.u, rec.v, &rec.p.copy());
+        if in_mat_ptr.scatter(&r, &rec, &mut attenuation, &mut scattered) {
+            return emitted + ray_color(&scattered, &background, &world, depth - 1) * attenuation;
+        } else {
+            return emitted;
+        }
+    }
+
+    Color::new(0.0, 0.0, 0.0)
 }
 
 pub fn two_spheres() -> Hittablelist {
@@ -141,6 +184,324 @@ pub fn earth() -> Hittablelist {
         &Point3::new(0.0, 0.0, 0.0),
         2.0,
         &earth_surface,
+    )));
+
+    objects
+}
+
+pub fn simple_light() -> Hittablelist {
+    let mut objects = Hittablelist::default_new();
+
+    let pertext = Some(Box::new(Texture::Noisetexture(Noisetexture::new(4.0))));
+
+    let material1 = Some(Box::new(Material::Lambertian(Lambertian::new_from_ptr(
+        &pertext,
+    ))));
+
+    objects.add(Object::Sphere(Sphere::new(
+        &Point3::new(0.0, -1000.0, 0.0),
+        1000.0,
+        &material1,
+    )));
+    objects.add(Object::Sphere(Sphere::new(
+        &Point3::new(0.0, 2.0, 0.0),
+        2.0,
+        &material1,
+    )));
+
+    let difflight = Some(Box::new(Material::Diffuselight(
+        Diffuselight::new_from_color(&Color::new(4.0, 4.0, 4.0)),
+    )));
+
+    objects.add(Object::XYrect(XYrect::new(
+        &difflight, 3.0, 5.0, 1.0, 3.0, -2.0,
+    )));
+
+    objects
+}
+
+pub fn cornell_box() -> Hittablelist {
+    let mut objects = Hittablelist::default_new();
+
+    let red = Some(Box::new(Material::Lambertian(Lambertian::new(
+        &Color::new(0.65, 0.05, 0.05),
+    ))));
+    let white = Some(Box::new(Material::Lambertian(Lambertian::new(
+        &Color::new(0.73, 0.73, 0.73),
+    ))));
+    let green = Some(Box::new(Material::Lambertian(Lambertian::new(
+        &Color::new(0.12, 0.45, 0.15),
+    ))));
+    let light = Some(Box::new(Material::Diffuselight(
+        Diffuselight::new_from_color(&Color::new(15.0, 15.0, 15.0)),
+    )));
+
+    objects.add(Object::YZrect(YZrect::new(
+        &green, 0.0, 555.0, 0.0, 555.0, 555.0,
+    )));
+    objects.add(Object::YZrect(YZrect::new(
+        &red, 0.0, 555.0, 0.0, 555.0, 0.0,
+    )));
+    objects.add(Object::XZrect(XZrect::new(
+        &light, 213.0, 343.0, 227.0, 332.0, 554.0,
+    )));
+    objects.add(Object::XZrect(XZrect::new(
+        &white, 0.0, 555.0, 0.0, 555.0, 0.0,
+    )));
+    objects.add(Object::XZrect(XZrect::new(
+        &white, 0.0, 555.0, 0.0, 555.0, 555.0,
+    )));
+    objects.add(Object::XYrect(XYrect::new(
+        &white, 0.0, 555.0, 0.0, 555.0, 555.0,
+    )));
+    /*
+        objects.add(Object::Boxx(Boxx::new(
+            &Point3::new(130.0, 0.0, 65.0),
+            &Point3::new(295.0, 165.0, 230.0),
+            &white,
+        )));
+        objects.add(Object::Boxx(Boxx::new(
+            &Point3::new(265.0, 0.0, 295.0),
+            &Point3::new(430.0, 330.0, 460.0),
+            &white,
+        )));
+    */
+    let box1 = Some(Box::new(Object::Boxx(Boxx::new(
+        &Point3::new(0.0, 0.0, 0.0),
+        &Point3::new(165.0, 330.0, 165.0),
+        &white,
+    ))));
+    let box1 = Some(Box::new(Object::RotateY(RotateY::new(&box1, 15.0))));
+    objects.add(Object::Translate(Translate::new(
+        &box1,
+        &Vec3::new(265.0, 0.0, 295.0),
+    )));
+
+    let box2 = Some(Box::new(Object::Boxx(Boxx::new(
+        &Point3::new(0.0, 0.0, 0.0),
+        &Point3::new(165.0, 165.0, 165.0),
+        &white,
+    ))));
+    let box2 = Some(Box::new(Object::RotateY(RotateY::new(&box2, -18.0))));
+    objects.add(Object::Translate(Translate::new(
+        &box2,
+        &Vec3::new(130.0, 0.0, 65.0),
+    )));
+
+    objects
+}
+
+pub fn cornell_smoke() -> Hittablelist {
+    let mut objects = Hittablelist::default_new();
+
+    let red = Some(Box::new(Material::Lambertian(Lambertian::new(
+        &Color::new(0.65, 0.05, 0.05),
+    ))));
+    let white = Some(Box::new(Material::Lambertian(Lambertian::new(
+        &Color::new(0.73, 0.73, 0.73),
+    ))));
+    let green = Some(Box::new(Material::Lambertian(Lambertian::new(
+        &Color::new(0.12, 0.45, 0.15),
+    ))));
+    let light = Some(Box::new(Material::Diffuselight(
+        Diffuselight::new_from_color(&Color::new(7.0, 7.0, 7.0)),
+    )));
+
+    objects.add(Object::YZrect(YZrect::new(
+        &green, 0.0, 555.0, 0.0, 555.0, 555.0,
+    )));
+    objects.add(Object::YZrect(YZrect::new(
+        &red, 0.0, 555.0, 0.0, 555.0, 0.0,
+    )));
+    objects.add(Object::XZrect(XZrect::new(
+        &light, 113.0, 443.0, 127.0, 432.0, 554.0,
+    )));
+    objects.add(Object::XZrect(XZrect::new(
+        &white, 0.0, 555.0, 0.0, 555.0, 0.0,
+    )));
+    objects.add(Object::XZrect(XZrect::new(
+        &white, 0.0, 555.0, 0.0, 555.0, 555.0,
+    )));
+    objects.add(Object::XYrect(XYrect::new(
+        &white, 0.0, 555.0, 0.0, 555.0, 555.0,
+    )));
+
+    let box1 = Some(Box::new(Object::Boxx(Boxx::new(
+        &Point3::new(0.0, 0.0, 0.0),
+        &Point3::new(165.0, 330.0, 165.0),
+        &white,
+    ))));
+    let box1 = Some(Box::new(Object::RotateY(RotateY::new(&box1, 15.0))));
+    let box1 = Some(Box::new(Object::Translate(Translate::new(
+        &box1,
+        &Vec3::new(265.0, 0.0, 295.0),
+    ))));
+    objects.add(Object::ConstantMedium(ConstantMedium::new_from_color(
+        &box1,
+        0.01,
+        &Color::new(0.0, 0.0, 0.0),
+    )));
+
+    let box2 = Some(Box::new(Object::Boxx(Boxx::new(
+        &Point3::new(0.0, 0.0, 0.0),
+        &Point3::new(165.0, 165.0, 165.0),
+        &white,
+    ))));
+    let box2 = Some(Box::new(Object::RotateY(RotateY::new(&box2, -18.0))));
+    let box2 = Some(Box::new(Object::Translate(Translate::new(
+        &box2,
+        &Vec3::new(130.0, 0.0, 65.0),
+    ))));
+    objects.add(Object::ConstantMedium(ConstantMedium::new_from_color(
+        &box2,
+        0.01,
+        &Color::new(1.0, 1.0, 1.0),
+    )));
+
+    objects
+}
+
+pub fn final_scene() -> Hittablelist {
+    let mut boxes1 = Hittablelist::default_new();
+
+    let ground = Some(Box::new(Material::Lambertian(Lambertian::new(
+        &Color::new(0.48, 0.83, 0.53),
+    ))));
+
+    let boxes_per_side = 20;
+    for i in 0..boxes_per_side {
+        for j in 0..boxes_per_side {
+            let w = 100.0;
+            let x0 = -1000.0 + (i as f64) * w;
+            let z0 = -1000.0 + (j as f64) * w;
+            let y0 = 0.0;
+            let x1 = x0 + w;
+            let y1 = rand::random_double_between(1.0, 101.0);
+            let z1 = z0 + w;
+
+            boxes1.add(Object::Boxx(Boxx::new(
+                &Point3::new(x0, y0, z0),
+                &Point3::new(x1, y1, z1),
+                &ground,
+            )));
+        }
+    }
+
+    let mut objects = Hittablelist::default_new();
+
+    objects.add(Object::Bvhnode(Bvhnode::new_from_list(
+        &mut boxes1,
+        0.0,
+        1.0,
+    )));
+
+    let light = Some(Box::new(Material::Diffuselight(
+        Diffuselight::new_from_color(&Color::new(7.0, 7.0, 7.0)),
+    )));
+
+    objects.add(Object::XZrect(XZrect::new(
+        &light, 123.0, 423.0, 147.0, 412.0, 554.0,
+    )));
+
+    let center1 = Point3::new(400.0, 400.0, 200.0);
+    let center2 = center1 + Vec3::new(30.0, 0.0, 0.0);
+    let moving_sphere_material = Some(Box::new(Material::Lambertian(Lambertian::new(
+        &Color::new(0.7, 0.3, 0.1),
+    ))));
+    objects.add(Object::Movingsphere(Movingsphere::new(
+        &center1,
+        &center2,
+        0.0,
+        1.0,
+        50.0,
+        &moving_sphere_material,
+    )));
+
+    let die_mat = Some(Box::new(Material::Dielectric(Dielectric::new(1.5))));
+    let met_mat = Some(Box::new(Material::Metal(Metal::new(
+        &Color::new(0.8, 0.8, 0.9),
+        1.0,
+    ))));
+    objects.add(Object::Sphere(Sphere::new(
+        &Point3::new(260.0, 150.0, 45.0),
+        50.0,
+        &die_mat,
+    )));
+    objects.add(Object::Sphere(Sphere::new(
+        &Point3::new(0.0, 150.0, 145.0),
+        50.0,
+        &met_mat,
+    )));
+
+    let boundary = Some(Box::new(Object::Sphere(Sphere::new(
+        &Point3::new(360.0, 150.0, 145.0),
+        70.0,
+        &die_mat,
+    ))));
+    objects.add(Object::Sphere(Sphere::new(
+        &Point3::new(360.0, 150.0, 145.0),
+        70.0,
+        &die_mat,
+    )));
+    objects.add(Object::ConstantMedium(ConstantMedium::new_from_color(
+        &boundary,
+        0.2,
+        &Color::new(0.2, 0.4, 0.9),
+    )));
+    let boundary = Some(Box::new(Object::Sphere(Sphere::new(
+        &Point3::new(0.0, 0.0, 0.0),
+        5000.0,
+        &die_mat,
+    ))));
+    objects.add(Object::ConstantMedium(ConstantMedium::new_from_color(
+        &boundary,
+        0.0001,
+        &Color::new(1.0, 1.0, 1.0),
+    )));
+
+    let earth_texture = Some(Box::new(Texture::Imagetexture(Imagetexture::new(
+        &String::from("image/earthmap.jpg"),
+    ))));
+    let e_mat = Some(Box::new(Material::Lambertian(Lambertian::new_from_ptr(
+        &earth_texture,
+    ))));
+    objects.add(Object::Sphere(Sphere::new(
+        &Point3::new(400.0, 200.0, 400.0),
+        100.0,
+        &e_mat,
+    )));
+    let pertext = Some(Box::new(Texture::Noisetexture(Noisetexture::new(4.0))));
+    let lam_mat = Some(Box::new(Material::Lambertian(Lambertian::new_from_ptr(
+        &pertext,
+    ))));
+    objects.add(Object::Sphere(Sphere::new(
+        &Point3::new(220.0, 280.0, 300.0),
+        80.0,
+        &lam_mat,
+    )));
+
+    let mut boxes2 = Hittablelist::default_new();
+    let white = Some(Box::new(Material::Lambertian(Lambertian::new(
+        &Color::new(0.73, 0.73, 0.73),
+    ))));
+    let ns = 1000;
+    for _j in 0..ns {
+        boxes2.add(Object::Sphere(Sphere::new(
+            &Point3::random_between(0.0, 165.0),
+            10.0,
+            &white,
+        )));
+    }
+
+    let bvh_obj = Some(Box::new(Object::Bvhnode(Bvhnode::new_from_list(
+        &mut boxes2,
+        0.0,
+        1.0,
+    ))));
+    let rot_obj = Some(Box::new(Object::RotateY(RotateY::new(&bvh_obj, 15.0))));
+    objects.add(Object::Translate(Translate::new(
+        &rot_obj,
+        &Vec3::new(-100.0, 270.0, 395.0),
     )));
 
     objects
@@ -243,15 +604,21 @@ fn main() {
     print!("{}[2J", 27 as char); // Clear screen
     print!("{esc}[2J{esc}[1;1H", esc = 27 as char); // Set cursor position as 1,1
 
-    let height = 225;
-    let width = 400;
-    let quality = 60; // From 0 to 100
+    let height = 800;
+    let width = 800;
+    let quality = 100; // From 0 to 100
     let path = "output/output.jpg";
-
-    let aspect_ratio = 16.0 / 9.0;
-    let image_width = 400;
+    /*
+        let aspect_ratio = 16.0 / 9.0;
+        let image_width = 400;
+        let image_height = ((image_width as f64) / aspect_ratio) as i32;
+        let samples_per_pixel = 50; //记得改成500
+        let max_depth = 50;
+    */
+    let aspect_ratio = 1.0;
+    let image_width = 800;
     let image_height = ((image_width as f64) / aspect_ratio) as i32;
-    let samples_per_pixel = 5; //记得改成500
+    let samples_per_pixel = 20; //记得改成500
     let max_depth = 50;
 
     println!(
@@ -279,9 +646,11 @@ fn main() {
     let lookat;
     let vfov;
     let mut aperture = 0.0;
+    let mut background = Color::new(0.0, 0.0, 0.0);
     match 0 {
         1 => {
             world = random_scene();
+            background = Color::new(0.7, 0.8, 1.0);
             lookfrom = Point3::new(13.0, 2.0, 3.0);
             lookat = Point3::new(0.0, 0.0, 0.0);
             vfov = 20.0;
@@ -289,21 +658,48 @@ fn main() {
         }
         2 => {
             world = two_spheres();
+            background = Color::new(0.7, 0.8, 1.0);
             lookfrom = Point3::new(13.0, 2.0, 3.0);
             lookat = Point3::new(0.0, 0.0, 0.0);
             vfov = 20.0;
         }
         3 => {
             world = two_perlin_spheres();
+            background = Color::new(0.7, 0.8, 1.0);
             lookfrom = Point3::new(13.0, 2.0, 3.0);
             lookat = Point3::new(0.0, 0.0, 0.0);
             vfov = 20.0;
         }
-        _ => {
+        4 => {
             world = earth();
+            background = Color::new(0.7, 0.8, 1.0);
             lookfrom = Point3::new(13.0, 2.0, 3.0);
             lookat = Point3::new(0.0, 0.0, 0.0);
             vfov = 20.0;
+        }
+        5 => {
+            world = simple_light();
+            lookfrom = Point3::new(26.0, 3.0, 6.0);
+            lookat = Point3::new(0.0, 2.0, 0.0);
+            vfov = 20.0;
+        }
+        6 => {
+            world = cornell_box();
+            lookfrom = Point3::new(278.0, 278.0, -800.0);
+            lookat = Point3::new(278.0, 278.0, 0.0);
+            vfov = 40.0;
+        }
+        7 => {
+            world = cornell_smoke();
+            lookfrom = Point3::new(278.0, 278.0, -800.0);
+            lookat = Point3::new(278.0, 278.0, 0.0);
+            vfov = 40.0;
+        }
+        _ => {
+            world = final_scene();
+            lookfrom = Point3::new(478.0, 278.0, -600.0);
+            lookat = Point3::new(278.0, 278.0, 0.0);
+            vfov = 40.0;
         }
     }
 
@@ -331,7 +727,7 @@ fn main() {
                 let u = (((x as f64) + rand::random_double()) / ((image_width - 1) as f64)) as f64;
                 let v = (((y as f64) + rand::random_double()) / ((image_height - 1) as f64)) as f64;
                 let r = cam.get_ray(u, v);
-                pixel_color1 += ray_color(&r, &world, max_depth);
+                pixel_color1 += ray_color(&r, &background, &world, max_depth);
             }
             let pixel_color2 = color::write_color(pixel_color1, samples_per_pixel);
 

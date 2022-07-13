@@ -1,6 +1,7 @@
 #![allow(dead_code)]
 #![allow(unused_variables)]
 #![allow(clippy::many_single_char_names)]
+#![allow(clippy::clone_double_ref)]
 extern crate image;
 
 pub use crate::color;
@@ -12,7 +13,6 @@ pub use image::{imageops, DynamicImage, GenericImage, GenericImageView, ImageBuf
 const BYTES_PER_PIXEL: i32 = 3;
 
 pub struct Imagetexture {
-    file_name: String,
     data: RgbImage,
     width: i32,
     height: i32,
@@ -21,20 +21,13 @@ pub struct Imagetexture {
 
 impl Imagetexture {
     pub fn new(filename: &str) -> Imagetexture {
-        //println!("{}", filename.trim());
         let img = image::open(filename).unwrap().to_rgb8();
-        //println!("{}", filename.trim());
         let (width, height) = img.dimensions();
         let width = width as i32;
         let height = height as i32;
         let bytes_per_scanline = BYTES_PER_PIXEL * width;
-        let mut file_name = String::new();
-        for ch in filename.chars() {
-            file_name.push(ch);
-        }
 
         Imagetexture {
-            file_name,
             data: img,
             width,
             height,
@@ -43,19 +36,10 @@ impl Imagetexture {
     }
 
     pub fn copy(&self) -> Imagetexture {
-        let mut file_name = String::new();
-        for ch in self.file_name.chars() {
-            file_name.push(ch);
-        }
-        let mut file_name_copy = String::new();
-        for ch in self.file_name.chars() {
-            file_name_copy.push(ch);
-        }
         Imagetexture {
-            file_name,
             width: self.width,
             height: self.height,
-            data: image::open(file_name_copy).unwrap().to_rgb8(),
+            data: self.data.clone(),
             bytes_per_scanline: self.bytes_per_scanline,
         }
     }
