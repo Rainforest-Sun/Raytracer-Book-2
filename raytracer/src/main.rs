@@ -402,84 +402,84 @@ pub fn final_scene() -> Hittablelist {
     objects.add(Object::XZrect(XZrect::new(
         &light, 123.0, 423.0, 147.0, 412.0, 554.0,
     )));
-    /*
-        let center1 = Point3::new(400.0, 400.0, 200.0);
-        let center2 = center1 + Vec3::new(30.0, 0.0, 0.0);
-        let moving_sphere_material = Some(Box::new(Material::Lambertian(Lambertian::new(
-            &Color::new(0.7, 0.3, 0.1),
-        ))));
-        objects.add(Object::Movingsphere(Movingsphere::new(
-            &center1,
-            &center2,
-            0.0,
-            1.0,
-            50.0,
-            &moving_sphere_material,
-        )));
 
-        let die_mat = Some(Box::new(Material::Dielectric(Dielectric::new(1.5))));
-        let met_mat = Some(Box::new(Material::Metal(Metal::new(
-            &Color::new(0.8, 0.8, 0.9),
-            1.0,
-        ))));
-        objects.add(Object::Sphere(Sphere::new(
-            &Point3::new(260.0, 150.0, 45.0),
-            50.0,
-            &die_mat,
-        )));
-        objects.add(Object::Sphere(Sphere::new(
-            &Point3::new(0.0, 150.0, 145.0),
-            50.0,
-            &met_mat,
-        )));
+    let center1 = Point3::new(400.0, 400.0, 200.0);
+    let center2 = center1 + Vec3::new(30.0, 0.0, 0.0);
+    let moving_sphere_material = Some(Box::new(Material::Lambertian(Lambertian::new(
+        &Color::new(0.7, 0.3, 0.1),
+    ))));
+    objects.add(Object::Movingsphere(Movingsphere::new(
+        &center1,
+        &center2,
+        0.0,
+        1.0,
+        50.0,
+        &moving_sphere_material,
+    )));
 
-        let boundary = Some(Box::new(Object::Sphere(Sphere::new(
-            &Point3::new(360.0, 150.0, 145.0),
-            70.0,
-            &die_mat,
-        ))));
-        objects.add(Object::Sphere(Sphere::new(
-            &Point3::new(360.0, 150.0, 145.0),
-            70.0,
-            &die_mat,
-        )));
-        objects.add(Object::ConstantMedium(ConstantMedium::new_from_color(
-            &boundary,
-            0.2,
-            &Color::new(0.2, 0.4, 0.9),
-        )));
-        let boundary = Some(Box::new(Object::Sphere(Sphere::new(
-            &Point3::new(0.0, 0.0, 0.0),
-            5000.0,
-            &die_mat,
-        ))));
-        objects.add(Object::ConstantMedium(ConstantMedium::new_from_color(
-            &boundary,
-            0.0001,
-            &Color::new(1.0, 1.0, 1.0),
-        )));
+    let die_mat = Some(Box::new(Material::Dielectric(Dielectric::new(1.5))));
+    let met_mat = Some(Box::new(Material::Metal(Metal::new(
+        &Color::new(0.8, 0.8, 0.9),
+        1.0,
+    ))));
+    objects.add(Object::Sphere(Sphere::new(
+        &Point3::new(260.0, 150.0, 45.0),
+        50.0,
+        &die_mat,
+    )));
+    objects.add(Object::Sphere(Sphere::new(
+        &Point3::new(0.0, 150.0, 145.0),
+        50.0,
+        &met_mat,
+    )));
 
-        let earth_texture = Some(Box::new(Texture::Imagetexture(Imagetexture::new(
-            &String::from("image/earthmap.jpg"),
-        ))));
-        let e_mat = Some(Box::new(Material::Lambertian(Lambertian::new_from_ptr(
-            &earth_texture,
-        ))));
-        objects.add(Object::Sphere(Sphere::new(
-            &Point3::new(400.0, 200.0, 400.0),
-            100.0,
-            &e_mat,
-        )));
-        let pertext = Some(Box::new(Texture::Noisetexture(Noisetexture::new(4.0))));
-        let lam_mat = Some(Box::new(Material::Lambertian(Lambertian::new_from_ptr(
-            &pertext,
-        ))));
-        objects.add(Object::Sphere(Sphere::new(
-            &Point3::new(220.0, 280.0, 300.0),
-            80.0,
-            &lam_mat,
-        )));
-    */
+    let boundary = Some(Box::new(Object::Sphere(Sphere::new(
+        &Point3::new(360.0, 150.0, 145.0),
+        70.0,
+        &die_mat,
+    ))));
+    objects.add(Object::Sphere(Sphere::new(
+        &Point3::new(360.0, 150.0, 145.0),
+        70.0,
+        &die_mat,
+    )));
+    objects.add(Object::ConstantMedium(ConstantMedium::new_from_color(
+        &boundary,
+        0.2,
+        &Color::new(0.2, 0.4, 0.9),
+    )));
+    let boundary = Some(Box::new(Object::Sphere(Sphere::new(
+        &Point3::new(0.0, 0.0, 0.0),
+        5000.0,
+        &die_mat,
+    ))));
+    objects.add(Object::ConstantMedium(ConstantMedium::new_from_color(
+        &boundary,
+        0.0001,
+        &Color::new(1.0, 1.0, 1.0),
+    )));
+
+    let earth_texture = Some(Box::new(Texture::Imagetexture(Imagetexture::new(
+        &String::from("image/earthmap.jpg"),
+    ))));
+    let e_mat = Some(Box::new(Material::Lambertian(Lambertian::new_from_ptr(
+        &earth_texture,
+    ))));
+    objects.add(Object::Sphere(Sphere::new(
+        &Point3::new(400.0, 200.0, 400.0),
+        100.0,
+        &e_mat,
+    )));
+    let pertext = Some(Box::new(Texture::Noisetexture(Noisetexture::new(4.0))));
+    let lam_mat = Some(Box::new(Material::Lambertian(Lambertian::new_from_ptr(
+        &pertext,
+    ))));
+    objects.add(Object::Sphere(Sphere::new(
+        &Point3::new(220.0, 280.0, 300.0),
+        80.0,
+        &lam_mat,
+    )));
+
     let mut boxes2 = Hittablelist::default_new();
     let white = Some(Box::new(Material::Lambertian(Lambertian::new(
         &Color::new(0.73, 0.73, 0.73),
