@@ -1,3 +1,4 @@
+use crate::color;
 use crate::rand;
 use std::ops::{Add, AddAssign, Div, DivAssign, Index, IndexMut, Mul, MulAssign, Neg, Sub};
 pub struct Vec3 {
@@ -145,6 +146,20 @@ impl Vec3 {
         let r_out_perp = (uv.copy() + n.copy() * cos_theta) * etai_over_etat;
         let r_out_parallel = n.copy() * (-((1.0 - r_out_perp.length_squared()).abs().sqrt()));
         r_out_perp + r_out_parallel
+    }
+
+    pub fn calc_color(&self, samples_per_pixel: u32) -> Vec3 {
+        let scale = 1. / samples_per_pixel as f64;
+        // sqrt means gamma-correct
+        Vec3::new(
+            color::clamp((self.x * scale).sqrt() * 256., 0., 256.),
+            color::clamp((self.y * scale).sqrt() * 256., 0., 256.),
+            color::clamp((self.z * scale).sqrt() * 256., 0., 256.),
+        )
+    }
+
+    pub fn to_u8_array(self) -> [u8; 3] {
+        [self.x as u8, self.y as u8, self.z as u8]
     }
 }
 

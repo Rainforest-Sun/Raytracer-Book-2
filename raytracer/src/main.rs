@@ -1,9 +1,16 @@
-use std::{fs::File, process::exit};
+#![allow(non_snake_case)]
+pub use std::{
+    fs::File,
+    process::exit,
+    sync::{mpsc, Arc},
+    thread,
+    time::Instant,
+};
 
-use image::{ImageBuffer, RgbImage};
+pub use image::{ImageBuffer, RgbImage};
 
-use console::style;
-use indicatif::{ProgressBar, ProgressStyle};
+pub use console::style;
+pub use indicatif::{HumanDuration, MultiProgress, ProgressBar, ProgressStyle};
 
 pub mod aabb;
 pub mod boxx;
@@ -70,31 +77,7 @@ pub use crate::translate::Translate;
 pub use crate::vec3::Color;
 pub use crate::vec3::Point3;
 pub use crate::vec3::Vec3;
-/*
-pub fn ray_color(r: &Ray, world: &Hittablelist, depth: i32) -> Color {
-    let mut rec = Hitrecord::default_new();
-    let inf: f64 = 1.79769e+308;
 
-    if depth <= 0 {
-        return Color::new(0.0, 0.0, 0.0);
-    }
-
-    if world.hit(&r, 0.001, inf, &mut rec) {
-        let mut scattered = Ray::default_new();
-        let mut attenuation = Color::default_new();
-        if let Some(in_mat_ptr) = &rec.mat_ptr {
-            if in_mat_ptr.scatter(&r, &rec, &mut attenuation, &mut scattered) {
-                return ray_color(&scattered, &world, depth - 1) * attenuation;
-            } else {
-                return Color::new(0.0, 0.0, 0.0);
-            }
-        }
-    }
-    let unit_direction = Vec3::unit_vector(&r.direction());
-    let t = 0.5 * (unit_direction.y() + 1.0);
-    Color::new(1.0, 1.0, 1.0) * (1.0 - t) + Color::new(0.5, 0.7, 1.0) * t
-}
-*/
 pub fn ray_color(r: &Ray, background: &Color, world: &Hittablelist, depth: i32) -> Color {
     let mut rec = Hitrecord::default_new();
     let inf: f64 = 1.79769e+308;
@@ -254,18 +237,6 @@ pub fn cornell_box() -> Hittablelist {
     objects.add(Object::XYrect(XYrect::new(
         &white, 0.0, 555.0, 0.0, 555.0, 555.0,
     )));
-    /*
-        objects.add(Object::Boxx(Boxx::new(
-            &Point3::new(130.0, 0.0, 65.0),
-            &Point3::new(295.0, 165.0, 230.0),
-            &white,
-        )));
-        objects.add(Object::Boxx(Boxx::new(
-            &Point3::new(265.0, 0.0, 295.0),
-            &Point3::new(430.0, 330.0, 460.0),
-            &white,
-        )));
-    */
     let box1 = Some(Box::new(Object::Boxx(Boxx::new(
         &Point3::new(0.0, 0.0, 0.0),
         &Point3::new(165.0, 330.0, 165.0),
@@ -603,44 +574,37 @@ pub fn random_scene() -> Hittablelist {
 fn main() {
     print!("{}[2J", 27 as char); // Clear screen
     print!("{esc}[2J{esc}[1;1H", esc = 27 as char); // Set cursor position as 1,1
+    println!(
+        "\n         {}    {}\n",
+        style("rainforest's Ray Tracer").cyan(),
+        style(format!("v{}", env!("CARGO_PKG_VERSION"))).yellow(),
+    );
+    println!(
+        "{} 💿 {}",
+        style("[1/5]").bold().dim(),
+        style("Initlizing...").green()
+    );
+    let begin_time = Instant::now();
 
-    let height = 800;
-    let width = 800;
+    const THREAD_NUMBER: usize = 7;
     let quality = 100; // From 0 to 100
-    let path = "output/output.jpg";
-    /*
-        let aspect_ratio = 16.0 / 9.0;
-        let image_width = 400;
-        let image_height = ((image_width as f64) / aspect_ratio) as i32;
-        let samples_per_pixel = 50; //记得改成500
-        let max_depth = 50;
-    */
-    let aspect_ratio = 1.0;
     let image_width = 800;
-    let image_height = ((image_width as f64) / aspect_ratio) as i32;
-    let samples_per_pixel = 500; //记得改成500
+    let aspect_ratio = 1.0;
+    let image_height = ((image_width as f64) / aspect_ratio) as u32;
+    let samples_per_pixel = 50; //记得改成500
+    let path = "output/output.jpg";
     let max_depth = 50;
 
     println!(
         "Image size: {}\nJPEG quality: {}",
-        style(width.to_string() + &"x".to_string() + &height.to_string()).yellow(),
+        style(image_width.to_string() + &"x".to_string() + &image_height.to_string()).yellow(),
         style(quality.to_string()).yellow(),
     );
 
     // Create image data
-    let mut img: RgbImage = ImageBuffer::new(width, height);
+    let mut img: RgbImage = ImageBuffer::new(image_width, image_height);
     // Progress bar UI powered by library `indicatif`
     // Get environment variable CI, which is true for GitHub Action
-    let progress = if option_env!("CI").unwrap_or_default() == "true" {
-        ProgressBar::hidden()
-    } else {
-        ProgressBar::new((height * width) as u64)
-    };
-    progress.set_style(ProgressStyle::default_bar()
-        .template("{spinner:.green} [{elapsed_precise}] [{wide_bar:.cyan/blue}] [{pos}/{len}] ({eta})")
-        .progress_chars("#>-"));
-
-    let world;
 
     let lookfrom;
     let lookat;
@@ -649,7 +613,7 @@ fn main() {
     let mut background = Color::new(0.0, 0.0, 0.0);
     match 0 {
         1 => {
-            world = random_scene();
+            //world = random_scene();
             background = Color::new(0.7, 0.8, 1.0);
             lookfrom = Point3::new(13.0, 2.0, 3.0);
             lookat = Point3::new(0.0, 0.0, 0.0);
@@ -657,52 +621,52 @@ fn main() {
             aperture = 0.1;
         }
         2 => {
-            world = two_spheres();
+            //world = two_spheres();
             background = Color::new(0.7, 0.8, 1.0);
             lookfrom = Point3::new(13.0, 2.0, 3.0);
             lookat = Point3::new(0.0, 0.0, 0.0);
             vfov = 20.0;
         }
         3 => {
-            world = two_perlin_spheres();
+            //world = two_perlin_spheres();
             background = Color::new(0.7, 0.8, 1.0);
             lookfrom = Point3::new(13.0, 2.0, 3.0);
             lookat = Point3::new(0.0, 0.0, 0.0);
             vfov = 20.0;
         }
         4 => {
-            world = earth();
+            //world = earth();
             background = Color::new(0.7, 0.8, 1.0);
             lookfrom = Point3::new(13.0, 2.0, 3.0);
             lookat = Point3::new(0.0, 0.0, 0.0);
             vfov = 20.0;
         }
         5 => {
-            world = simple_light();
+            //world = simple_light();
             lookfrom = Point3::new(26.0, 3.0, 6.0);
             lookat = Point3::new(0.0, 2.0, 0.0);
             vfov = 20.0;
         }
         6 => {
-            world = cornell_box();
+            //world = cornell_box();
             lookfrom = Point3::new(278.0, 278.0, -800.0);
             lookat = Point3::new(278.0, 278.0, 0.0);
             vfov = 40.0;
         }
         7 => {
-            world = cornell_smoke();
+            //world = cornell_smoke();
             lookfrom = Point3::new(278.0, 278.0, -800.0);
             lookat = Point3::new(278.0, 278.0, 0.0);
             vfov = 40.0;
         }
         _ => {
-            world = final_scene();
+            //world = final_scene();
             lookfrom = Point3::new(478.0, 278.0, -600.0);
             lookat = Point3::new(278.0, 278.0, 0.0);
             vfov = 40.0;
         }
     }
-
+    let world = final_scene();
     let vup = Vec3::new(0.0, 1.0, 0.0);
     let dist_to_focus = 10.0;
     let cam = Camera::new(
@@ -717,33 +681,145 @@ fn main() {
         1.0,
     );
 
-    //print!("P3\n{} {}\n255\n", image_width, image_height);
     // Generate image
-    for y in 0..height {
-        for x in 0..width {
-            let mut pixel_color1 = Color::new(0.0, 0.0, 0.0);
+    println!(
+        "{} 🚀 {} {} {}",
+        style("[2/5]").bold().dim(),
+        style("Rendering with").green(),
+        style(THREAD_NUMBER.to_string()).yellow(),
+        style("Threads...").green(),
+    );
+    let SECTION_LINE_NUM: usize = (image_height as usize) / THREAD_NUMBER;
+    let mut output_pixel_color = Vec::<Color>::new();
+    let mut thread_pool = Vec::<_>::new();
+    let multiprogress = Arc::new(MultiProgress::new());
+    multiprogress.set_move_cursor(true); // turn on this to reduce flickering
 
-            for _s in 0..samples_per_pixel {
-                let u = (((x as f64) + rand::random_double()) / ((image_width - 1) as f64)) as f64;
-                let v = (((y as f64) + rand::random_double()) / ((image_height - 1) as f64)) as f64;
-                let r = cam.get_ray(u, v);
-                pixel_color1 += ray_color(&r, &background, &world, max_depth);
+    for thread_id in 0..THREAD_NUMBER {
+        let line_beg = SECTION_LINE_NUM * thread_id;
+        let mut line_end = line_beg + SECTION_LINE_NUM;
+        if line_end > (image_height as usize)
+            || (thread_id == THREAD_NUMBER - 1 && line_end < (image_height as usize))
+        {
+            line_end = image_height as usize;
+        }
+
+        // Secene
+
+        let world = world.copy();
+        let cam = cam.copy();
+        let mp = multiprogress.clone();
+        let progress_bar = mp.add(ProgressBar::new(
+            ((line_end - line_beg) * (image_width as usize)) as u64,
+        ));
+        progress_bar.set_style(ProgressStyle::default_bar()
+        .template("{spinner:.green} [{elapsed_precise}] [{wide_bar:.cyan/blue}] [{pos}/{len}] ({eta})")
+        .progress_chars("#>-"));
+
+        let (tx, rx) = mpsc::channel();
+
+        thread_pool.push((
+            thread::spawn(move || {
+                let mut progress = 0;
+                progress_bar.set_position(0);
+
+                let channel_send = tx;
+
+                let mut section_pixel_color = Vec::<Color>::new();
+
+                //let mut rnd = rand::thread_rng();
+
+                for y in line_beg..line_end {
+                    for x in 0..image_width {
+                        let mut pixel_color = Color::default_new();
+                        for _i in 0..samples_per_pixel {
+                            let u = (x as f64 + rand::random_double()) / (image_width - 1) as f64;
+                            let v = (y as f64 + rand::random_double()) / (image_height - 1) as f64;
+                            let ray = cam.get_ray(u, v);
+                            pixel_color += ray_color(&ray, &background, &world, max_depth);
+                        }
+                        section_pixel_color.push(pixel_color);
+
+                        progress += 1;
+                        progress_bar.set_position(progress);
+                    }
+                }
+                channel_send.send(section_pixel_color).unwrap();
+                progress_bar.finish_with_message("Finished.");
+            }),
+            rx,
+        ));
+    }
+    // 等待所有线程结束
+    multiprogress.join().unwrap();
+
+    //========================================================
+
+    println!(
+        "{} 🚛 {}",
+        style("[3/5]").bold().dim(),
+        style("Collecting Threads Results...").green(),
+    );
+
+    //let mut thread_finish_successfully = true;
+    let collecting_progress_bar = ProgressBar::new(THREAD_NUMBER as u64);
+    // join 和 recv 均会阻塞主线程
+    for thread_id in 0..THREAD_NUMBER {
+        let thread = thread_pool.remove(0);
+        match thread.0.join() {
+            Ok(_) => {
+                let mut received = thread.1.recv().unwrap();
+                output_pixel_color.append(&mut received);
+                collecting_progress_bar.inc(1);
             }
-            let pixel_color2 = color::write_color(pixel_color1, samples_per_pixel);
-
-            let pixel_color = [
-                pixel_color2.x() as u8,
-                pixel_color2.y() as u8,
-                pixel_color2.z() as u8,
-            ];
-            let pixel = img.get_pixel_mut(x, height - y - 1);
-            *pixel = image::Rgb(pixel_color);
-            progress.inc(1);
+            Err(_) => {
+                //thread_finish_successfully = false;
+                println!(
+                    "      ⚠️ {}{}{}",
+                    style("Joining the ").red(),
+                    style(thread_id.to_string()).yellow(),
+                    style("th thread failed!").red(),
+                );
+            }
         }
     }
-    progress.finish();
+
+    collecting_progress_bar.finish_and_clear();
+
+    println!(
+        "{} 🏭 {}",
+        style("[4/5]").bold().dim(),
+        style("Generating Image...").green()
+    );
+
+    let mut pixel_id = 0;
+
+    for y in 0..image_height as u32 {
+        for x in 0..image_width as u32 {
+            let pixel_color = output_pixel_color[pixel_id].calc_color(samples_per_pixel);
+            // + halo[y as usize][x as usize];
+
+            let pixel = img.get_pixel_mut(x, image_height - y - 1);
+            *pixel = image::Rgb(pixel_color.to_u8_array());
+
+            pixel_id += 1;
+        }
+    }
 
     // Output image to file
+    println!(
+        "{} 🥽 {}",
+        style("[5/5]").bold().dim(),
+        style("Outping Image...").green()
+    );
+    println!(
+        "         Image format:              {}",
+        style("JPEG").yellow()
+    );
+    println!(
+        "         JPEG image quality:        {}",
+        style(quality.to_string()).yellow()
+    );
     println!("Ouput image as \"{}\"", style(path).yellow());
     let output_image = image::DynamicImage::ImageRgb8(img);
     let mut output_file = File::create(path).unwrap();
@@ -752,6 +828,13 @@ fn main() {
         // Err(_) => panic!("Outputting image fails."),
         Err(_) => println!("{}", style("Outputting image fails.").red()),
     }
+
+    println!(
+        "\n      🎉 {}\n      🕒 Elapsed Time: {}",
+        style("All Work Done.").bold().green(),
+        style(HumanDuration(begin_time.elapsed())).yellow(),
+    );
+    println!("\n");
 
     exit(0);
 }

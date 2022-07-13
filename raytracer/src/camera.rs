@@ -78,6 +78,21 @@ impl Camera {
         }
     }
 
+    pub fn copy(&self) -> Camera {
+        Camera {
+            origin: self.origin.copy(),
+            lower_left_corner: self.lower_left_corner.copy(),
+            horizontal: self.horizontal.copy(),
+            vertical: self.vertical.copy(),
+            u: self.u.copy(),
+            v: self.v.copy(),
+            w: self.w.copy(),
+            lens_radius: self.lens_radius,
+            time0: self.time0,
+            time1: self.time1,
+        }
+    }
+
     pub fn get_ray(&self, s: f64, t: f64) -> Ray {
         let rd = Vec3::random_in_unit_disk() * self.lens_radius;
         let offset = self.u.copy() * rd.x() + self.v.copy() * rd.y();
