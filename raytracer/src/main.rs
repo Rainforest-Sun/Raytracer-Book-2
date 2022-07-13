@@ -686,16 +686,39 @@ fn main() {
         "{} 🚀 {} {} {}",
         style("[2/5]").bold().dim(),
         style("Rendering with").green(),
-        style(THREAD_NUMBER.to_string()).yellow(),
+        style((THREAD_NUMBER + 2).to_string()).yellow(),
         style("Threads...").green(),
     );
-    let SECTION_LINE_NUM: usize = (image_height as usize) / THREAD_NUMBER;
+    let SECTION_LINE_NUM: usize = (image_height as usize) / (THREAD_NUMBER * 4);
     let mut output_pixel_color = Vec::<Color>::new();
     let mut thread_pool = Vec::<_>::new();
     let multiprogress = Arc::new(MultiProgress::new());
     multiprogress.set_move_cursor(true); // turn on this to reduce flickering
 
-    for thread_id in 0..THREAD_NUMBER {
+    for thread_id in 0..(THREAD_NUMBER + 2) {
+        let line_beg = match thread_id {
+            0 => 0,
+            1 => SECTION_LINE_NUM * 6,
+            2 => SECTION_LINE_NUM * 8,
+            3 => SECTION_LINE_NUM * 10,
+            4 => SECTION_LINE_NUM * 12,
+            5 => SECTION_LINE_NUM * 13,
+            6 => SECTION_LINE_NUM * 14,
+            7 => SECTION_LINE_NUM * 15,
+            _ => SECTION_LINE_NUM * 16,
+        };
+        let line_end = match thread_id {
+            0 => SECTION_LINE_NUM * 6,
+            1 => SECTION_LINE_NUM * 8,
+            2 => SECTION_LINE_NUM * 10,
+            3 => SECTION_LINE_NUM * 12,
+            4 => SECTION_LINE_NUM * 13,
+            5 => SECTION_LINE_NUM * 14,
+            6 => SECTION_LINE_NUM * 15,
+            7 => SECTION_LINE_NUM * 16,
+            _ => image_height as usize,
+        };
+        /*
         let line_beg = SECTION_LINE_NUM * thread_id;
         let mut line_end = line_beg + SECTION_LINE_NUM;
         if line_end > (image_height as usize)
@@ -703,6 +726,7 @@ fn main() {
         {
             line_end = image_height as usize;
         }
+        */
 
         // Secene
 
@@ -762,9 +786,9 @@ fn main() {
     );
 
     //let mut thread_finish_successfully = true;
-    let collecting_progress_bar = ProgressBar::new(THREAD_NUMBER as u64);
+    let collecting_progress_bar = ProgressBar::new((THREAD_NUMBER + 2) as u64);
     // join 和 recv 均会阻塞主线程
-    for thread_id in 0..THREAD_NUMBER {
+    for thread_id in 0..(THREAD_NUMBER + 2) {
         let thread = thread_pool.remove(0);
         match thread.0.join() {
             Ok(_) => {
@@ -797,7 +821,6 @@ fn main() {
     for y in 0..image_height as u32 {
         for x in 0..image_width as u32 {
             let pixel_color = output_pixel_color[pixel_id].calc_color(samples_per_pixel);
-            // + halo[y as usize][x as usize];
 
             let pixel = img.get_pixel_mut(x, image_height - y - 1);
             *pixel = image::Rgb(pixel_color.to_u8_array());
