@@ -441,6 +441,7 @@ pub fn final_scene() -> Hittablelist {
         100.0,
         &e_mat,
     )));
+
     let pertext = Some(Box::new(Texture::Noisetexture(Noisetexture::new(4.0))));
     let lam_mat = Some(Box::new(Material::Lambertian(Lambertian::new_from_ptr(
         &pertext,
@@ -591,7 +592,7 @@ fn main() {
     let image_width = 800;
     let aspect_ratio = 1.0;
     let image_height = ((image_width as f64) / aspect_ratio) as u32;
-    let samples_per_pixel = 50; //记得改成500
+    let samples_per_pixel = 100; //记得改成500
     let path = "output/output.jpg";
     let max_depth = 50;
 

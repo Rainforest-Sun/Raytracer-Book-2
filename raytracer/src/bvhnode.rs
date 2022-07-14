@@ -52,17 +52,92 @@ impl Bvhnode {
     }
 
     pub fn new_from_list(list: &mut Hittablelist, time0: f64, time1: f64) -> Bvhnode {
-        let len = list.objects.len();
-        Bvhnode::new_from_vec(&mut list.objects, 0, len, time0, time1)
+        //let len = list.objects.len();
+        Bvhnode::new_from_vec(&mut list.objects, time0, time1)
     }
+    /*
+        pub fn new_from_vec(
+            src_objects: &mut Vec<Object>,
+            start: usize,
+            end: usize,
+            time0: f64,
+            time1: f64,
+        ) -> Bvhnode {
+            let mut myleft: Option<Box<Object>> = None;
+            let mut myright: Option<Box<Object>> = None;
+            let mut objects: &mut Vec<Object> = src_objects;
 
-    pub fn new_from_vec(
-        src_objects: &mut Vec<Object>,
-        start: usize,
-        end: usize,
-        time0: f64,
-        time1: f64,
-    ) -> Bvhnode {
+            let axis = rand::random_int_between(0, 2);
+            let mut temp_x = Aabb::default_new();
+            let mut temp_y = Aabb::default_new();
+            let comparator = |x: &Object, y: &Object| {
+                x.boundingbox(time0, time1, &mut temp_x);
+                y.boundingbox(time0, time1, &mut temp_y);
+                f64::partial_cmp(
+                    &(temp_x.min()[axis as usize]),
+                    &(temp_y.min()[axis as usize]),
+                )
+                .unwrap()
+            };
+            let object_span = objects.len() - 1;
+
+            if object_span == 1 {
+                myleft = Some(Box::new(objects[start].copy()));
+                myright = Some(Box::new(objects[start].copy()));
+            } else if object_span == 2 {
+                if Bvhnode::box_compare(&objects[start], &objects[start + 1], axis) {
+                    myleft = Some(Box::new(objects[start].copy()));
+                    myright = Some(Box::new(objects[start + 1].copy()));
+                } else {
+                    myleft = Some(Box::new(objects[start + 1].copy()));
+                    myright = Some(Box::new(objects[start].copy()));
+                }
+            } else {
+                objects.sort_unstable_by(comparator);
+                let mut left_vec = objects;
+                let mut right_vec = left_vec.split_off(object_span / 2);
+
+                let mid = start + object_span / 2;
+                myleft = Some(Box::new(Object::Bvhnode(Bvhnode::new_from_vec(
+                    &mut left_vec,
+                    start,
+                    mid,
+                    time0,
+                    time1,
+                ))));
+                myright = Some(Box::new(Object::Bvhnode(Bvhnode::new_from_vec(
+                    &mut right_vec,
+                    mid,
+                    end,
+                    time0,
+                    time1,
+                ))));
+            }
+
+            let mut box_left = Aabb::default_new();
+            let mut box_right = Aabb::default_new();
+
+            let mut flag_l = false;
+            let mut flag_r = false;
+
+            if let Some(left) = &myleft {
+                flag_l = left.boundingbox(time0, time1, &mut box_left);
+            }
+            if let Some(right) = &myright {
+                flag_r = right.boundingbox(time0, time1, &mut box_right);
+            }
+            if !flag_l || !flag_r {
+                eprint!("No bounding box in bvh_node constructor.");
+            }
+
+            Bvhnode {
+                left: myleft,
+                right: myright,
+                boxx: Aabb::surrounding_box(&box_left, &box_right),
+            }
+        }
+    */
+    pub fn new_from_vec(src_objects: &mut Vec<Object>, time0: f64, time1: f64) -> Bvhnode {
         let mut myleft: Option<Box<Object>> = None;
         let mut myright: Option<Box<Object>> = None;
         let mut objects: &mut Vec<Object> = src_objects;
@@ -79,34 +154,32 @@ impl Bvhnode {
             )
             .unwrap()
         };
-        let object_span = end - start;
+        let object_span = objects.len();
 
         if object_span == 1 {
-            myleft = Some(Box::new(objects[start].copy()));
-            myright = Some(Box::new(objects[start].copy()));
+            myleft = Some(Box::new(objects[0].copy()));
+            myright = Some(Box::new(objects[0].copy()));
         } else if object_span == 2 {
-            if Bvhnode::box_compare(&objects[start], &objects[start + 1], axis) {
-                myleft = Some(Box::new(objects[start].copy()));
-                myright = Some(Box::new(objects[start + 1].copy()));
+            if Bvhnode::box_compare(&objects[0], &objects[1], axis) {
+                myleft = Some(Box::new(objects[0].copy()));
+                myright = Some(Box::new(objects[1].copy()));
             } else {
-                myleft = Some(Box::new(objects[start + 1].copy()));
-                myright = Some(Box::new(objects[start].copy()));
+                myleft = Some(Box::new(objects[1].copy()));
+                myright = Some(Box::new(objects[0].copy()));
             }
         } else {
             objects.sort_unstable_by(comparator);
+            let mut left_vec = objects;
+            let mut right_vec = left_vec.split_off(object_span / 2);
 
-            let mid = start + object_span / 2;
+            //let mid = object_span / 2;
             myleft = Some(Box::new(Object::Bvhnode(Bvhnode::new_from_vec(
-                &mut objects,
-                start,
-                mid,
+                &mut left_vec,
                 time0,
                 time1,
             ))));
             myright = Some(Box::new(Object::Bvhnode(Bvhnode::new_from_vec(
-                &mut objects,
-                mid,
-                end,
+                &mut right_vec,
                 time0,
                 time1,
             ))));
@@ -176,6 +249,7 @@ impl Hit for Bvhnode {
         if !self.boxx.hit(&r, t_min, t_max, &mut temp_rec) {
             return false;
         }
+        let mut temp_rec = Hitrecord::default_new();
         let mut hit_left = false;
         let mut hit_right = false;
         if let Some(left) = &self.left {
