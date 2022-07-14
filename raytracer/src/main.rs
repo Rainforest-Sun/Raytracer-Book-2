@@ -442,7 +442,7 @@ pub fn final_scene() -> Hittablelist {
         &e_mat,
     )));
 
-    let pertext = Some(Box::new(Texture::Noisetexture(Noisetexture::new(4.0))));
+    let pertext = Some(Box::new(Texture::Noisetexture(Noisetexture::new(0.1))));
     let lam_mat = Some(Box::new(Material::Lambertian(Lambertian::new_from_ptr(
         &pertext,
     ))));
@@ -457,6 +457,21 @@ pub fn final_scene() -> Hittablelist {
         &Color::new(0.73, 0.73, 0.73),
     ))));
     let ns = 1000;
+    /*
+    for _j in 0..ns {
+        let bvh_obj = Some(Box::new(Object::Sphere(Sphere::new(
+            &Point3::random_between(0.0, 165.0),
+            10.0,
+            &white,
+        ))));
+        let rot_obj = Some(Box::new(Object::RotateY(RotateY::new(&bvh_obj, 15.0))));
+        objects.add(Object::Translate(Translate::new(
+            &rot_obj,
+            &Vec3::new(-100.0, 270.0, 395.0),
+        )));
+    }
+    */
+
     for _j in 0..ns {
         boxes2.add(Object::Sphere(Sphere::new(
             &Point3::random_between(0.0, 165.0),

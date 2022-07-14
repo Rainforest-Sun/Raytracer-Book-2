@@ -27,14 +27,15 @@ pub struct Bvhnode {
 }
 
 impl Bvhnode {
-    pub fn default_new() -> Bvhnode {
-        Bvhnode {
-            left: None,
-            right: None,
-            boxx: Aabb::default_new(),
+    /*
+        pub fn default_new() -> Bvhnode {
+            Bvhnode {
+                left: None,
+                right: None,
+                boxx: Aabb::default_new(),
+            }
         }
-    }
-
+    */
     pub fn copy(&self) -> Bvhnode {
         Bvhnode {
             boxx: self.boxx.copy(),
@@ -143,9 +144,10 @@ impl Bvhnode {
         let mut objects: &mut Vec<Object> = src_objects;
 
         let axis = rand::random_int_between(0, 2);
-        let mut temp_x = Aabb::default_new();
-        let mut temp_y = Aabb::default_new();
+
         let comparator = |x: &Object, y: &Object| {
+            let mut temp_x = Aabb::default_new();
+            let mut temp_y = Aabb::default_new();
             x.boundingbox(time0, time1, &mut temp_x);
             y.boundingbox(time0, time1, &mut temp_y);
             f64::partial_cmp(
@@ -256,7 +258,11 @@ impl Hit for Bvhnode {
             hit_left = left.hit(&r, t_min, t_max, rec);
         }
         if let Some(right) = &self.right {
-            hit_right = right.hit(&r, t_min, t_max, rec);
+            if hit_left {
+                hit_right = right.hit(&r, t_min, rec.t, rec);
+            } else {
+                hit_right = right.hit(&r, t_min, t_max, rec);
+            }
         }
         hit_left || hit_right
     }
