@@ -2,6 +2,7 @@
 pub use crate::checker_texture::Checkertexture;
 pub use crate::image_texture::Imagetexture;
 pub use crate::noise_texture::Noisetexture;
+pub use crate::obj_texture::Objtexture;
 pub use crate::perlin::Perlin;
 pub use crate::solidcolor::Solidcolor;
 pub use crate::vec3::Color;
@@ -13,6 +14,7 @@ pub enum Texture {
     Checkertexture(Checkertexture),
     Noisetexture(Noisetexture),
     Imagetexture(Imagetexture),
+    Objtexture(Objtexture),
 }
 
 pub trait Value {
@@ -28,6 +30,7 @@ impl Texture {
             }
             Texture::Noisetexture(noisetexture) => Texture::Noisetexture(noisetexture.copy()),
             Texture::Imagetexture(imagetexture) => Texture::Imagetexture(imagetexture.copy()),
+            Texture::Objtexture(objtexture) => Texture::Objtexture(objtexture.copy()),
         }
     }
 }
@@ -41,6 +44,7 @@ impl Value for Texture {
             }
             Texture::Noisetexture(noisetexture) => Noisetexture::value(&noisetexture, u, v, &p),
             Texture::Imagetexture(imagetexture) => Imagetexture::value(&imagetexture, u, v, &p),
+            Texture::Objtexture(objtexture) => Objtexture::value(&objtexture, u, v, &p),
         }
     }
 }

@@ -32,6 +32,7 @@ pub mod metal;
 pub mod movingsphere;
 pub mod noise_texture;
 pub mod obj;
+pub mod obj_texture;
 pub mod perlin;
 pub mod rand;
 pub mod ray;
@@ -66,6 +67,7 @@ pub use crate::metal::Metal;
 pub use crate::movingsphere::Movingsphere;
 pub use crate::noise_texture::Noisetexture;
 pub use crate::obj::Obj;
+pub use crate::obj_texture::Objtexture;
 pub use crate::perlin::Perlin;
 pub use crate::ray::Ray;
 pub use crate::rect::XYrect;
@@ -522,13 +524,21 @@ pub fn myworld() -> Hittablelist {
     let light = Some(Box::new(Material::Diffuselight(
         Diffuselight::new_from_color(&Color::new(7.0, 7.0, 7.0)),
     )));
+    let orange_light = Some(Box::new(Material::Diffuselight(
+        Diffuselight::new_from_color(&Color::new(7.0, 0.725, 0.059)),
+    )));
     world.add(Object::Sphere(Sphere::new(
         &Point3::new(0.0, 2.0, 0.0),
         2.0,
         &light,
     )));
     let box1 = Some(Box::new(Object::YZrect(YZrect::new(
-        &light, 0.0, 5.0, 5.0, 13.0, 18.0,
+        &orange_light,
+        0.0,
+        5.0,
+        5.0,
+        18.0,
+        18.0,
     ))));
     let box1 = Some(Box::new(Object::RotateY(RotateY::new(&box1, -20.0))));
     world.add(Object::Translate(Translate::new(
@@ -602,7 +612,7 @@ pub fn myworld() -> Hittablelist {
         &pertext,
     ))));
     world.add(Object::Sphere(Sphere::new(
-        &Point3::new(10.0, 2.0, 15.0),
+        &Point3::new(8.0, 2.0, 18.0),
         2.0,
         &material1,
     )));
@@ -611,8 +621,8 @@ pub fn myworld() -> Hittablelist {
         &Color::new(0.0, 0.0, 0.8029),
     ))));
     let box1 = Some(Box::new(Object::Boxx(Boxx::new(
-        &Point3::new(10.0, 0.0, -10.0),
-        &Point3::new(15.0, 5.0, -5.0),
+        &Point3::new(5.0, 0.0, -20.0),
+        &Point3::new(10.0, 5.0, -15.0),
         &blue,
     ))));
     let box1 = Some(Box::new(Object::RotateY(RotateY::new(&box1, -45.0))));
@@ -626,9 +636,9 @@ pub fn myworld() -> Hittablelist {
         0.0,
     ))));
     let met_box = Some(Box::new(Object::XYrect(XYrect::new(
-        &met_mat, -50.0, 20.0, -10.0, 20.0, -60.0,
+        &met_mat, -50.0, 20.0, -10.0, 20.0, -15.0,
     ))));
-    let met_box = Some(Box::new(Object::RotateY(RotateY::new(&met_box, 15.0))));
+    let met_box = Some(Box::new(Object::RotateY(RotateY::new(&met_box, 25.0))));
     world.add(Object::Translate(Translate::new(
         &met_box,
         &Vec3::new(0.0, 0.0, 0.0),
@@ -671,33 +681,33 @@ pub fn myworld() -> Hittablelist {
     )));
     world.add(Object::Triangle(Triangle::new(
         &[
-            Point3::new(23.0, 17.6, -40.0),
-            Point3::new(23.3, 17.0, -40.0),
-            Point3::new(22.7, 17.0, -40.0),
+            Point3::new(23.0, 13.6, -40.0),
+            Point3::new(23.3, 13.0, -40.0),
+            Point3::new(22.7, 13.0, -40.0),
         ],
         &star,
     )));
     world.add(Object::Triangle(Triangle::new(
         &[
-            Point3::new(23.0, 16.4, -40.0),
-            Point3::new(23.3, 17.0, -40.0),
-            Point3::new(22.7, 17.0, -40.0),
+            Point3::new(23.0, 12.4, -40.0),
+            Point3::new(23.3, 13.0, -40.0),
+            Point3::new(22.7, 13.0, -40.0),
         ],
         &star,
     )));
     world.add(Object::Triangle(Triangle::new(
         &[
-            Point3::new(23.6, 17.0, -40.0),
-            Point3::new(23.0, 17.3, -40.0),
-            Point3::new(23.0, 16.7, -40.0),
+            Point3::new(23.6, 13.0, -40.0),
+            Point3::new(23.0, 13.3, -40.0),
+            Point3::new(23.0, 12.7, -40.0),
         ],
         &star,
     )));
     world.add(Object::Triangle(Triangle::new(
         &[
-            Point3::new(22.4, 17.0, -40.0),
-            Point3::new(23.0, 17.3, -40.0),
-            Point3::new(23.0, 16.7, -40.0),
+            Point3::new(22.4, 13.0, -40.0),
+            Point3::new(23.0, 13.3, -40.0),
+            Point3::new(23.0, 12.7, -40.0),
         ],
         &star,
     )));
@@ -737,33 +747,33 @@ pub fn myworld() -> Hittablelist {
 
     world.add(Object::Triangle(Triangle::new(
         &[
-            Point3::new(30.0, 15.0, -40.0),
-            Point3::new(30.5, 14.0, -40.0),
-            Point3::new(29.5, 14.0, -40.0),
+            Point3::new(35.0, 10.0, -40.0),
+            Point3::new(35.5, 9.0, -40.0),
+            Point3::new(34.5, 9.0, -40.0),
         ],
         &star,
     )));
     world.add(Object::Triangle(Triangle::new(
         &[
-            Point3::new(30.0, 13.0, -40.0),
-            Point3::new(30.5, 14.0, -40.0),
-            Point3::new(29.5, 14.0, -40.0),
+            Point3::new(35.0, 8.0, -40.0),
+            Point3::new(35.5, 9.0, -40.0),
+            Point3::new(34.5, 9.0, -40.0),
         ],
         &star,
     )));
     world.add(Object::Triangle(Triangle::new(
         &[
-            Point3::new(29.0, 14.0, -40.0),
-            Point3::new(30.0, 14.5, -40.0),
-            Point3::new(30.0, 13.5, -40.0),
+            Point3::new(34.0, 9.0, -40.0),
+            Point3::new(35.0, 9.5, -40.0),
+            Point3::new(35.0, 8.5, -40.0),
         ],
         &star,
     )));
     world.add(Object::Triangle(Triangle::new(
         &[
-            Point3::new(31.0, 14.0, -40.0),
-            Point3::new(30.0, 14.5, -40.0),
-            Point3::new(30.0, 13.5, -40.0),
+            Point3::new(36.0, 9.0, -40.0),
+            Point3::new(35.0, 9.5, -40.0),
+            Point3::new(35.0, 8.5, -40.0),
         ],
         &star,
     )));
@@ -797,6 +807,72 @@ pub fn myworld() -> Hittablelist {
             Point3::new(22.4, 17.0, 30.0),
             Point3::new(23.0, 17.3, 30.0),
             Point3::new(23.0, 16.7, 30.0),
+        ],
+        &star,
+    )));
+
+    world.add(Object::Triangle(Triangle::new(
+        &[
+            Point3::new(30.0, 15.0, 30.0),
+            Point3::new(30.5, 14.0, 30.0),
+            Point3::new(29.5, 14.0, 30.0),
+        ],
+        &star,
+    )));
+    world.add(Object::Triangle(Triangle::new(
+        &[
+            Point3::new(30.0, 13.0, 30.0),
+            Point3::new(30.5, 14.0, 30.0),
+            Point3::new(29.5, 14.0, 30.0),
+        ],
+        &star,
+    )));
+    world.add(Object::Triangle(Triangle::new(
+        &[
+            Point3::new(29.0, 14.0, 30.0),
+            Point3::new(30.0, 14.5, 30.0),
+            Point3::new(30.0, 13.5, 30.0),
+        ],
+        &star,
+    )));
+    world.add(Object::Triangle(Triangle::new(
+        &[
+            Point3::new(31.0, 14.0, 30.0),
+            Point3::new(30.0, 14.5, 30.0),
+            Point3::new(30.0, 13.5, 30.0),
+        ],
+        &star,
+    )));
+
+    world.add(Object::Triangle(Triangle::new(
+        &[
+            Point3::new(23.0, 13.6, 30.0),
+            Point3::new(23.3, 13.0, 30.0),
+            Point3::new(22.7, 13.0, 30.0),
+        ],
+        &star,
+    )));
+    world.add(Object::Triangle(Triangle::new(
+        &[
+            Point3::new(23.0, 12.4, 30.0),
+            Point3::new(23.3, 13.0, 30.0),
+            Point3::new(22.7, 13.0, 30.0),
+        ],
+        &star,
+    )));
+    world.add(Object::Triangle(Triangle::new(
+        &[
+            Point3::new(23.6, 13.0, 30.0),
+            Point3::new(23.0, 13.3, 30.0),
+            Point3::new(23.0, 12.7, 30.0),
+        ],
+        &star,
+    )));
+    world.add(Object::Triangle(Triangle::new(
+        &[
+            Point3::new(22.4, 13.0, 30.0),
+            Point3::new(23.0, 13.3, 30.0),
+            Point3::new(23.0, 12.7, 30.0),
         ],
         &star,
     )));
@@ -916,7 +992,7 @@ fn main() {
     let image_width = 800;
     let aspect_ratio = 16.0 / 9.0;
     let image_height = ((image_width as f64) / aspect_ratio) as u32;
-    let samples_per_pixel = 10000; //记得改成500
+    let samples_per_pixel = 1000; //记得改成500
     let path = "output/output.jpg";
     let max_depth = 50;
 
