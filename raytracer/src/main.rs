@@ -916,7 +916,7 @@ fn main() {
     let image_width = 800;
     let aspect_ratio = 16.0 / 9.0;
     let image_height = ((image_width as f64) / aspect_ratio) as u32;
-    let samples_per_pixel = 1000; //记得改成500
+    let samples_per_pixel = 10000; //记得改成500
     let path = "output/output.jpg";
     let max_depth = 50;
 
