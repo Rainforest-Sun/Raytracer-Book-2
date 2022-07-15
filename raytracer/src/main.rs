@@ -31,6 +31,7 @@ pub mod material;
 pub mod metal;
 pub mod movingsphere;
 pub mod noise_texture;
+pub mod obj;
 pub mod perlin;
 pub mod rand;
 pub mod ray;
@@ -40,6 +41,7 @@ pub mod solidcolor;
 pub mod sphere;
 pub mod texture;
 pub mod translate;
+pub mod triangle;
 pub mod vec3;
 
 pub use crate::aabb::Aabb;
@@ -63,6 +65,7 @@ pub use crate::material::Scatter;
 pub use crate::metal::Metal;
 pub use crate::movingsphere::Movingsphere;
 pub use crate::noise_texture::Noisetexture;
+pub use crate::obj::Obj;
 pub use crate::perlin::Perlin;
 pub use crate::ray::Ray;
 pub use crate::rect::XYrect;
@@ -74,6 +77,7 @@ pub use crate::sphere::Sphere;
 pub use crate::texture::Texture;
 pub use crate::texture::Value;
 pub use crate::translate::Translate;
+pub use crate::triangle::Triangle;
 pub use crate::vec3::Color;
 pub use crate::vec3::Point3;
 pub use crate::vec3::Vec3;
@@ -457,20 +461,6 @@ pub fn final_scene() -> Hittablelist {
         &Color::new(0.73, 0.73, 0.73),
     ))));
     let ns = 1000;
-    /*
-    for _j in 0..ns {
-        let bvh_obj = Some(Box::new(Object::Sphere(Sphere::new(
-            &Point3::random_between(0.0, 165.0),
-            10.0,
-            &white,
-        ))));
-        let rot_obj = Some(Box::new(Object::RotateY(RotateY::new(&bvh_obj, 15.0))));
-        objects.add(Object::Translate(Translate::new(
-            &rot_obj,
-            &Vec3::new(-100.0, 270.0, 395.0),
-        )));
-    }
-    */
 
     for _j in 0..ns {
         boxes2.add(Object::Sphere(Sphere::new(
@@ -492,6 +482,325 @@ pub fn final_scene() -> Hittablelist {
     )));
 
     objects
+}
+
+pub fn obj() -> Hittablelist {
+    let mut world = Hittablelist::default_new();
+    /*
+        let texture = Some(Box::new(Texture::Imagetexture(Imagetexture::new(
+            &String::from("image/Char_Patrick.png"),
+        ))));
+
+        let mat = Some(Box::new(Material::Lambertian(Lambertian::new_from_ptr(
+            &texture,
+        ))));
+    */
+    let mat = Some(Box::new(Material::Lambertian(Lambertian::new(
+        &Color::new(0.65, 0.05, 0.05),
+    ))));
+    //let patrick=Obj::new("image/patrick.obj",&met_mat,0.0,1.0);
+    world.add(Object::Obj(Obj::new("image/patrick.obj", &mat, 0.0, 1.0)));
+    world
+}
+
+pub fn myworld() -> Hittablelist {
+    let mut world = Hittablelist::default_new();
+    //地面
+    let checker = Some(Box::new(Texture::Checkertexture(
+        Checkertexture::new_from_color(&Color::new(0.0, 0.0, 0.0), &Color::new(0.2, 0.2, 0.2)),
+    )));
+    let ground_material = Some(Box::new(Material::Lambertian(Lambertian::new_from_ptr(
+        &checker,
+    ))));
+    world.add(Object::Sphere(Sphere::new(
+        &Point3::new(0.0, -100000.0, 0.0),
+        100000.0,
+        &ground_material,
+    )));
+
+    //光源
+    let light = Some(Box::new(Material::Diffuselight(
+        Diffuselight::new_from_color(&Color::new(7.0, 7.0, 7.0)),
+    )));
+    world.add(Object::Sphere(Sphere::new(
+        &Point3::new(0.0, 2.0, 0.0),
+        2.0,
+        &light,
+    )));
+    let box1 = Some(Box::new(Object::YZrect(YZrect::new(
+        &light, 0.0, 5.0, 5.0, 13.0, 18.0,
+    ))));
+    let box1 = Some(Box::new(Object::RotateY(RotateY::new(&box1, -20.0))));
+    world.add(Object::Translate(Translate::new(
+        &box1,
+        &Vec3::new(0.0, 0.0, 0.0),
+    )));
+    //上方有个亮球
+    let strong_light = Some(Box::new(Material::Diffuselight(
+        Diffuselight::new_from_color(&Color::new(15.0, 15.0, 15.0)),
+    )));
+    world.add(Object::Sphere(Sphere::new(
+        &Point3::new(0.0, 300.0, 0.0),
+        50.0,
+        &strong_light,
+    )));
+    //吊起来的球
+    let orange_light = Some(Box::new(Material::Diffuselight(
+        Diffuselight::new_from_color(&Color::new(1.0, 0.5, 0.0)),
+    )));
+    world.add(Object::YZrect(YZrect::new(
+        &orange_light,
+        8.0,
+        50.0,
+        10.0,
+        10.1,
+        -15.0,
+    )));
+    world.add(Object::Sphere(Sphere::new(
+        &Point3::new(-15.0, 6.0, 10.0),
+        2.0,
+        &orange_light,
+    )));
+
+    let pink_light = Some(Box::new(Material::Diffuselight(
+        Diffuselight::new_from_color(&Color::new(1.0, 0.08, 0.65)),
+    )));
+    world.add(Object::YZrect(YZrect::new(
+        &pink_light,
+        10.0,
+        50.0,
+        0.0,
+        0.1,
+        -12.0,
+    )));
+    world.add(Object::Sphere(Sphere::new(
+        &Point3::new(-12.0, 8.0, 0.0),
+        2.0,
+        &pink_light,
+    )));
+    //玻璃球
+    let die_mat = Some(Box::new(Material::Dielectric(Dielectric::new(1.5))));
+    world.add(Object::Sphere(Sphere::new(
+        &Point3::new(-2.0, 2.0, 25.0),
+        2.0,
+        &die_mat,
+    )));
+    //金属球
+    let met_mat = Some(Box::new(Material::Metal(Metal::new(
+        &Color::new(0.7, 0.6, 0.5),
+        0.4,
+    ))));
+    world.add(Object::Sphere(Sphere::new(
+        &Point3::new(-8.0, 2.0, 22.0),
+        2.0,
+        &met_mat,
+    )));
+    //大理石纹理
+    let pertext = Some(Box::new(Texture::Noisetexture(Noisetexture::new(4.0))));
+
+    let material1 = Some(Box::new(Material::Lambertian(Lambertian::new_from_ptr(
+        &pertext,
+    ))));
+    world.add(Object::Sphere(Sphere::new(
+        &Point3::new(10.0, 2.0, 15.0),
+        2.0,
+        &material1,
+    )));
+    //方格
+    let blue = Some(Box::new(Material::Lambertian(Lambertian::new(
+        &Color::new(0.0, 0.0, 0.8029),
+    ))));
+    let box1 = Some(Box::new(Object::Boxx(Boxx::new(
+        &Point3::new(10.0, 0.0, -10.0),
+        &Point3::new(15.0, 5.0, -5.0),
+        &blue,
+    ))));
+    let box1 = Some(Box::new(Object::RotateY(RotateY::new(&box1, -45.0))));
+    world.add(Object::Translate(Translate::new(
+        &box1,
+        &Vec3::new(-5.0, 0.0, -5.0),
+    )));
+    //镜子
+    let met_mat = Some(Box::new(Material::Metal(Metal::new(
+        &Color::new(0.7, 0.6, 0.5),
+        0.0,
+    ))));
+    let met_box = Some(Box::new(Object::XYrect(XYrect::new(
+        &met_mat, -50.0, 20.0, -10.0, 20.0, -60.0,
+    ))));
+    let met_box = Some(Box::new(Object::RotateY(RotateY::new(&met_box, 15.0))));
+    world.add(Object::Translate(Translate::new(
+        &met_box,
+        &Vec3::new(0.0, 0.0, 0.0),
+    )));
+    //星星
+    let star = Some(Box::new(Material::Diffuselight(
+        Diffuselight::new_from_color(&Color::new(1.0, 0.843, 0.0)),
+    )));
+    world.add(Object::Triangle(Triangle::new(
+        &[
+            Point3::new(20.0, 20.0, -40.0),
+            Point3::new(20.5, 19.0, -40.0),
+            Point3::new(19.5, 19.0, -40.0),
+        ],
+        &star,
+    )));
+    world.add(Object::Triangle(Triangle::new(
+        &[
+            Point3::new(20.0, 18.0, -40.0),
+            Point3::new(20.5, 19.0, -40.0),
+            Point3::new(19.5, 19.0, -40.0),
+        ],
+        &star,
+    )));
+    world.add(Object::Triangle(Triangle::new(
+        &[
+            Point3::new(19.0, 19.0, -40.0),
+            Point3::new(20.0, 19.5, -40.0),
+            Point3::new(20.0, 18.5, -40.0),
+        ],
+        &star,
+    )));
+    world.add(Object::Triangle(Triangle::new(
+        &[
+            Point3::new(21.0, 19.0, -40.0),
+            Point3::new(20.0, 19.5, -40.0),
+            Point3::new(20.0, 18.5, -40.0),
+        ],
+        &star,
+    )));
+    world.add(Object::Triangle(Triangle::new(
+        &[
+            Point3::new(23.0, 17.6, -40.0),
+            Point3::new(23.3, 17.0, -40.0),
+            Point3::new(22.7, 17.0, -40.0),
+        ],
+        &star,
+    )));
+    world.add(Object::Triangle(Triangle::new(
+        &[
+            Point3::new(23.0, 16.4, -40.0),
+            Point3::new(23.3, 17.0, -40.0),
+            Point3::new(22.7, 17.0, -40.0),
+        ],
+        &star,
+    )));
+    world.add(Object::Triangle(Triangle::new(
+        &[
+            Point3::new(23.6, 17.0, -40.0),
+            Point3::new(23.0, 17.3, -40.0),
+            Point3::new(23.0, 16.7, -40.0),
+        ],
+        &star,
+    )));
+    world.add(Object::Triangle(Triangle::new(
+        &[
+            Point3::new(22.4, 17.0, -40.0),
+            Point3::new(23.0, 17.3, -40.0),
+            Point3::new(23.0, 16.7, -40.0),
+        ],
+        &star,
+    )));
+
+    world.add(Object::Triangle(Triangle::new(
+        &[
+            Point3::new(30.0, 17.6, -40.0),
+            Point3::new(30.3, 17.0, -40.0),
+            Point3::new(29.7, 17.0, -40.0),
+        ],
+        &star,
+    )));
+    world.add(Object::Triangle(Triangle::new(
+        &[
+            Point3::new(30.0, 16.4, -40.0),
+            Point3::new(30.3, 17.0, -40.0),
+            Point3::new(29.7, 17.0, -40.0),
+        ],
+        &star,
+    )));
+    world.add(Object::Triangle(Triangle::new(
+        &[
+            Point3::new(30.6, 17.0, -40.0),
+            Point3::new(30.0, 17.3, -40.0),
+            Point3::new(30.0, 16.7, -40.0),
+        ],
+        &star,
+    )));
+    world.add(Object::Triangle(Triangle::new(
+        &[
+            Point3::new(29.4, 17.0, -40.0),
+            Point3::new(30.0, 17.3, -40.0),
+            Point3::new(30.0, 16.7, -40.0),
+        ],
+        &star,
+    )));
+
+    world.add(Object::Triangle(Triangle::new(
+        &[
+            Point3::new(30.0, 15.0, -40.0),
+            Point3::new(30.5, 14.0, -40.0),
+            Point3::new(29.5, 14.0, -40.0),
+        ],
+        &star,
+    )));
+    world.add(Object::Triangle(Triangle::new(
+        &[
+            Point3::new(30.0, 13.0, -40.0),
+            Point3::new(30.5, 14.0, -40.0),
+            Point3::new(29.5, 14.0, -40.0),
+        ],
+        &star,
+    )));
+    world.add(Object::Triangle(Triangle::new(
+        &[
+            Point3::new(29.0, 14.0, -40.0),
+            Point3::new(30.0, 14.5, -40.0),
+            Point3::new(30.0, 13.5, -40.0),
+        ],
+        &star,
+    )));
+    world.add(Object::Triangle(Triangle::new(
+        &[
+            Point3::new(31.0, 14.0, -40.0),
+            Point3::new(30.0, 14.5, -40.0),
+            Point3::new(30.0, 13.5, -40.0),
+        ],
+        &star,
+    )));
+
+    world.add(Object::Triangle(Triangle::new(
+        &[
+            Point3::new(23.0, 17.6, 30.0),
+            Point3::new(23.3, 17.0, 30.0),
+            Point3::new(22.7, 17.0, 30.0),
+        ],
+        &star,
+    )));
+    world.add(Object::Triangle(Triangle::new(
+        &[
+            Point3::new(23.0, 16.4, 30.0),
+            Point3::new(23.3, 17.0, 30.0),
+            Point3::new(22.7, 17.0, 30.0),
+        ],
+        &star,
+    )));
+    world.add(Object::Triangle(Triangle::new(
+        &[
+            Point3::new(23.6, 17.0, 30.0),
+            Point3::new(23.0, 17.3, 30.0),
+            Point3::new(23.0, 16.7, 30.0),
+        ],
+        &star,
+    )));
+    world.add(Object::Triangle(Triangle::new(
+        &[
+            Point3::new(22.4, 17.0, 30.0),
+            Point3::new(23.0, 17.3, 30.0),
+            Point3::new(23.0, 16.7, 30.0),
+        ],
+        &star,
+    )));
+    world
 }
 
 pub fn random_scene() -> Hittablelist {
@@ -605,9 +914,9 @@ fn main() {
     const THREAD_NUMBER: usize = 7;
     let quality = 100; // From 0 to 100
     let image_width = 800;
-    let aspect_ratio = 1.0;
+    let aspect_ratio = 16.0 / 9.0;
     let image_height = ((image_width as f64) / aspect_ratio) as u32;
-    let samples_per_pixel = 200; //记得改成500
+    let samples_per_pixel = 1000; //记得改成500
     let path = "output/output.jpg";
     let max_depth = 50;
 
@@ -675,14 +984,28 @@ fn main() {
             lookat = Point3::new(278.0, 278.0, 0.0);
             vfov = 40.0;
         }
-        _ => {
+        8 => {
             //world = final_scene();
             lookfrom = Point3::new(478.0, 278.0, -600.0);
             lookat = Point3::new(278.0, 278.0, 0.0);
             vfov = 40.0;
         }
+        9 => {
+            //world = obj();
+            background = Color::new(0.7, 0.8, 1.0);
+            lookfrom = Point3::new(3.0, 0.0, 10.0);
+            lookat = Point3::new(0.0, 0.0, 0.0);
+            vfov = 20.0;
+        }
+        _ => {
+            //world = myworld();
+            //background = Color::new(0.098, 0.098, 0.439);
+            lookfrom = Point3::new(0.0, 5.0, 40.0);
+            lookat = Point3::new(0.0, 0.0, 0.0);
+            vfov = 40.0;
+        }
     }
-    let world = final_scene();
+    let world = myworld();
     let vup = Vec3::new(0.0, 1.0, 0.0);
     let dist_to_focus = 10.0;
     let cam = Camera::new(

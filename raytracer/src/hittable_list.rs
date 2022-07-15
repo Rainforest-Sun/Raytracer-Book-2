@@ -6,6 +6,7 @@ pub use crate::hittable::Boundingbox;
 pub use crate::hittable::Hit;
 pub use crate::hittable::Hitrecord;
 pub use crate::movingsphere::Movingsphere;
+pub use crate::obj::Obj;
 pub use crate::ray::Ray;
 pub use crate::rect::XYrect;
 pub use crate::rect::XZrect;
@@ -13,6 +14,7 @@ pub use crate::rect::YZrect;
 pub use crate::rotate::RotateY;
 pub use crate::sphere::Sphere;
 pub use crate::translate::Translate;
+pub use crate::triangle::Triangle;
 pub use crate::vec3::Color;
 pub use crate::vec3::Point3;
 pub use crate::vec3::Vec3;
@@ -29,6 +31,8 @@ pub enum Object {
     Translate(Translate),
     RotateY(RotateY),
     ConstantMedium(ConstantMedium),
+    Triangle(Triangle),
+    Obj(Obj),
 }
 
 impl Hit for Object {
@@ -49,6 +53,8 @@ impl Hit for Object {
             Object::ConstantMedium(constantmedium) => {
                 ConstantMedium::hit(&constantmedium, &r, t_min, t_max, rec)
             }
+            Object::Triangle(triangle) => Triangle::hit(&triangle, &r, t_min, t_max, rec),
+            Object::Obj(obj) => Obj::hit(&obj, &r, t_min, t_max, rec),
         }
     }
 }
@@ -72,6 +78,10 @@ impl Boundingbox for Object {
             Object::ConstantMedium(constantmedium) => {
                 ConstantMedium::boundingbox(&constantmedium, _time0, _time1, output_box)
             }
+            Object::Triangle(triangle) => {
+                Triangle::boundingbox(&triangle, _time0, _time1, output_box)
+            }
+            Object::Obj(obj) => Obj::boundingbox(&obj, _time0, _time1, output_box),
             _ => false,
         }
     }
@@ -91,6 +101,8 @@ impl Object {
             Object::Translate(translate) => Object::Translate(translate.copy()),
             Object::RotateY(rotatey) => Object::RotateY(rotatey.copy()),
             Object::ConstantMedium(constantmedium) => Object::ConstantMedium(constantmedium.copy()),
+            Object::Triangle(triangle) => Object::Triangle(triangle.copy()),
+            Object::Obj(obj) => Object::Obj(obj.copy()),
         }
     }
 }
